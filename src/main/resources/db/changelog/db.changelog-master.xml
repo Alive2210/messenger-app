@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="1" author="messenger">
+        <createTable tableName="users">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="public_key" type="TEXT"/>
+            <column name="private_key_encrypted" type="TEXT"/>
+            <column name="is_online" type="BOOLEAN" defaultValue="false"/>
+            <column name="last_seen" type="TIMESTAMP"/>
+            <column name="avatar_url" type="VARCHAR(500)"/>
+            <column name="phone_number" type="VARCHAR(20)"/>
+            <column name="status_message" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="messenger">
+        <createTable tableName="chats">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="chat_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="chat_name" type="VARCHAR(100)"/>
+            <column name="chat_avatar" type="VARCHAR(500)"/>
+            <column name="created_by" type="UUID">
+                <constraints foreignKeyName="fk_chat_creator" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="is_encrypted" type="BOOLEAN" defaultValue="true"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="messenger">
+        <createTable tableName="user_chats">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_userchat_user" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="chat_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_userchat_chat" referencedTableName="chats" referencedColumnNames="id"/>
+            </column>
+            <column name="is_admin" type="BOOLEAN" defaultValue="false"/>
+            <column name="joined_at" type="TIMESTAMP"/>
+            <column name="last_read_message_id" type="UUID"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        
+        <addUniqueConstraint tableName="user_chats" columnNames="user_id, chat_id" constraintName="uk_user_chat"/>
+    </changeSet>
+
+    <changeSet id="4" author="messenger">
+        <createTable tableName="messages">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="chat_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_message_chat" referencedTableName="chats" referencedColumnNames="id"/>
+            </column>
+            <column name="sender_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_message_sender" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="message_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="encrypted_content" type="TEXT"/>
+            <column name="encryption_iv" type="VARCHAR(255)"/>
+            <column name="reply_to_message_id" type="UUID">
+                <constraints foreignKeyName="fk_message_reply" referencedTableName="messages" referencedColumnNames="id"/>
+            </column>
+            <column name="is_deleted" type="BOOLEAN" defaultValue="false"/>
+            <column name="is_edited" type="BOOLEAN" defaultValue="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        
+        <createIndex tableName="messages" indexName="idx_messages_chat_created">
+            <column name="chat_id"/>
+            <column name="created_at"/>
+        </createIndex>
+        
+        <createIndex tableName="messages" indexName="idx_messages_sender">
+            <column name="sender_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="5" author="messenger">
+        <createTable tableName="file_attachments">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="message_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_file_message" referencedTableName="messages" referencedColumnNames="id"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_size" type="BIGINT"/>
+            <column name="file_url" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="thumbnail_url" type="VARCHAR(500)"/>
+            <column name="is_encrypted" type="BOOLEAN" defaultValue="true"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        
+        <addUniqueConstraint tableName="file_attachments" columnNames="message_id" constraintName="uk_file_message"/>
+    </changeSet>
+
+    <changeSet id="6" author="messenger">
+        <createTable tableName="voice_messages">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="message_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_voice_message" referencedTableName="messages" referencedColumnNames="id"/>
+            </column>
+            <column name="audio_url" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_seconds" type="INTEGER"/>
+            <column name="file_size" type="BIGINT"/>
+            <column name="mime_type" type="VARCHAR(50)"/>
+            <column name="waveform_data" type="TEXT"/>
+            <column name="is_listened" type="BOOLEAN" defaultValue="false"/>
+            <column name="is_encrypted" type="BOOLEAN" defaultValue="true"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        
+        <addUniqueConstraint tableName="voice_messages" columnNames="message_id" constraintName="uk_voice_message"/>
+    </changeSet>
+
+    <changeSet id="7" author="messenger">
+        <createTable tableName="message_status">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="message_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_status_message" referencedTableName="messages" referencedColumnNames="id"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_status_user" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+        
+        <addUniqueConstraint tableName="message_status" columnNames="message_id, user_id" constraintName="uk_message_user_status"/>
+        
+        <createIndex tableName="message_status" indexName="idx_status_user">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="8" author="messenger">
+        <createTable tableName="video_conferences">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="room_id" type="VARCHAR(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="chat_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_conference_chat" referencedTableName="chats" referencedColumnNames="id"/>
+            </column>
+            <column name="initiator_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_conference_initiator" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="conference_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="TIMESTAMP"/>
+            <column name="ended_at" type="TIMESTAMP"/>
+            <column name="is_recorded" type="BOOLEAN" defaultValue="false"/>
+            <column name="recording_url" type="VARCHAR(500)"/>
+            <column name="max_participants" type="INTEGER" defaultValue="50"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        
+        <createIndex tableName="video_conferences" indexName="idx_conference_chat">
+            <column name="chat_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="9" author="messenger">
+        <createTable tableName="conference_participants">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conference_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_participant_conference" referencedTableName="video_conferences" referencedColumnNames="id"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_participant_user" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="joined_at" type="TIMESTAMP"/>
+            <column name="left_at" type="TIMESTAMP"/>
+            <column name="is_video_enabled" type="BOOLEAN" defaultValue="true"/>
+            <column name="is_audio_enabled" type="BOOLEAN" defaultValue="true"/>
+            <column name="is_screen_sharing" type="BOOLEAN" defaultValue="false"/>
+            <column name="is_host" type="BOOLEAN" defaultValue="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+        
+        <createIndex tableName="conference_participants" indexName="idx_participant_conference">
+            <column name="conference_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

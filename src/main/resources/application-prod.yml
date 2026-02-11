@@ -1,0 +1,193 @@
+server:
+  port: ${SERVER_PORT:8080}
+  ssl:
+    enabled: false  # SSL handled by Nginx
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+
+spring:
+  profiles:
+    active: prod
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:messenger_db}
+    username: ${DB_USERNAME:messenger_user}
+    password: ${DB_PASSWORD:messenger_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: MessengerHikariPool
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    contexts: prod
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    listener:
+      simple:
+        concurrency: 10
+        max-concurrency: 50
+        prefetch: 100
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1000
+          multiplier: 2
+          max-attempts: 3
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_FILE_SIZE:100MB}
+      max-request-size: ${MAX_REQUEST_SIZE:100MB}
+
+  cache:
+    type: redis
+  
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 20
+        min-idle: 5
+        max-wait: 2000ms
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# MinIO Configuration
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET_NAME:messenger-files}
+
+# Encryption
+encryption:
+  signal:
+    enabled: true
+
+# WebSocket
+websocket:
+  endpoint: /ws
+  allowed-origins: "*"
+
+# Video Conference
+webrtc:
+  # STUN/TURN серверы для работы через VPN и NAT
+  ice-servers:
+    # Локальный TURN сервер (в VPN)
+    - url: turn:${TURN_SERVER_HOST:coturn}:${TURN_SERVER_PORT:3478}
+      username: ${TURN_USER:messenger}
+      credential: ${TURN_PASS:secure_password_123}
+    - url: turns:${TURN_SERVER_HOST:coturn}:${TURN_SERVER_TLS_PORT:5349}
+      username: ${TURN_USER:messenger}
+      credential: ${TURN_PASS:secure_password_123}
+    # Публичные STUN серверы (резерв)
+    - url: stun:stun.l.google.com:19302
+    - url: stun:stun1.l.google.com:19302
+  
+  # Настройки качества видео - БЕЗ ПОТЕРЬ
+  video:
+    codec: ${VIDEO_CODEC:VP9}  # VP9 или H264 для лучшего качества
+    bitrate: ${VIDEO_BITRATE:4000000}  # 4 Mbps для HD без потерь
+    framerate: ${VIDEO_FRAMERATE:30}
+    width: ${VIDEO_WIDTH:1920}
+    height: ${VIDEO_HEIGHT:1080}
+    degradation-preference: maintain-resolution  # Сохранять разрешение при просадках
+  
+  # Настройки аудио - БЕЗ ПОТЕРЬ
+  audio:
+    codec: opus
+    bitrate: ${AUDIO_BITRATE:128000}  # 128 kbps для CD качества
+    sample-rate: 48000
+    echo-cancellation: true
+    noise-suppression: true
+    auto-gain-control: false  # Отключаем для сохранения качества
+  
+  # P2P настройки (приоритет прямого соединения в VPN)
+  p2p:
+    enabled: true
+    stun-retries: 3
+    turn-retries: 2
+  
+  # Сетевые настройки
+  network:
+    ice-candidate-pool-size: 10
+    bundle-policy: balanced
+    rtcp-mux-policy: require
+    tcp-candidate-policy: enabled
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.messenger: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+    max-size: 100MB
+    max-history: 30
+
+# Management / Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# Application info
+info:
+  app:
+    name: Secure Messenger
+    version: 1.0.0
+    description: End-to-end encrypted messenger
