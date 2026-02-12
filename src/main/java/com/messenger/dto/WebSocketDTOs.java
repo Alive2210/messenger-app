@@ -48,7 +48,7 @@ class VoiceMessageDTO {
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-class MessageDTO {
+public class MessageDTO {
     private UUID id;
     private UUID chatId;
     private String senderId;
@@ -67,7 +67,7 @@ class MessageDTO {
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-class MessageStatusDTO {
+public class MessageStatusDTO {
     private UUID messageId;
     private String status; // SENT, DELIVERED, READ
 }
@@ -113,7 +113,7 @@ class ReadReceiptDTO {
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-class ErrorDTO {
+public class ErrorDTO {
     private String error;
 }
 
