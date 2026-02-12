@@ -41,8 +41,7 @@ public class FileStorageService {
                             .object(fileName)
                             .stream(file.getInputStream(), file.getSize(), -1)
                             .contentType(contentType)
-                            .build()
-            );
+                            .build());
 
             log.info("File uploaded successfully: {}", fileName);
             return fileName;
@@ -51,8 +50,6 @@ public class FileStorageService {
             throw new RuntimeException("Failed to upload file", e);
         }
     }
-
-    private final AudioProcessingService audioProcessingService;
 
     @Value("${audio.processing.enabled:true}")
     private boolean audioProcessingEnabled;
@@ -77,9 +74,8 @@ public class FileStorageService {
                         audioData,
                         noiseSuppressionEnabled,
                         echoCancellationEnabled,
-                        normalizationEnabled
-                );
-                log.debug("Audio processing applied: {} -> {} bytes", 
+                        normalizationEnabled);
+                log.debug("Audio processing applied: {} -> {} bytes",
                         audioData.length, processedAudio.length);
             }
 
@@ -93,8 +89,7 @@ public class FileStorageService {
                                 .object(fileName)
                                 .stream(stream, processedAudio.length, -1)
                                 .contentType(contentType)
-                                .build()
-                );
+                                .build());
             }
 
             log.info("Voice message uploaded: {}", fileName);
@@ -113,8 +108,7 @@ public class FileStorageService {
                             .bucket(bucketName)
                             .object(fileName)
                             .expiry(7, TimeUnit.DAYS)
-                            .build()
-            );
+                            .build());
         } catch (Exception e) {
             log.error("Error generating file URL", e);
             throw new RuntimeException("Failed to generate file URL", e);
@@ -127,8 +121,7 @@ public class FileStorageService {
                     GetObjectArgs.builder()
                             .bucket(bucketName)
                             .object(fileName)
-                            .build()
-            );
+                            .build());
             return response.readAllBytes();
         } catch (Exception e) {
             log.error("Error downloading file", e);
@@ -142,8 +135,7 @@ public class FileStorageService {
                     RemoveObjectArgs.builder()
                             .bucket(bucketName)
                             .object(fileName)
-                            .build()
-            );
+                            .build());
             log.info("File deleted: {}", fileName);
         } catch (Exception e) {
             log.error("Error deleting file", e);
@@ -151,21 +143,19 @@ public class FileStorageService {
         }
     }
 
-    private void ensureBucketExists() throws ServerException, InsufficientDataException, 
-            ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, 
+    private void ensureBucketExists() throws ServerException, InsufficientDataException,
+            ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException,
             InvalidResponseException, XmlParserException, InternalException {
         boolean bucketExists = minioClient.bucketExists(
                 BucketExistsArgs.builder()
                         .bucket(bucketName)
-                        .build()
-        );
+                        .build());
 
         if (!bucketExists) {
             minioClient.makeBucket(
                     MakeBucketArgs.builder()
                             .bucket(bucketName)
-                            .build()
-            );
+                            .build());
             log.info("Created bucket: {}", bucketName);
         }
     }
