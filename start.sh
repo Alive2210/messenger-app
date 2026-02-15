@@ -12,11 +12,22 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Check if .env exists
+# Check if .env exists - if not, run install first
 if [ ! -f .env ]; then
-    echo -e "${RED}[ERROR] .env file not found!${NC}"
-    echo "Please run ./install.sh first to set up the environment."
-    exit 1
+    echo -e "${YELLOW}[INFO] .env file not found! Running installation first...${NC}"
+    echo ""
+    if [ -f ./install.sh ]; then
+        chmod +x ./install.sh
+        ./install.sh
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}[ERROR] Installation failed!${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}[ERROR] install.sh not found!${NC}"
+        exit 1
+    fi
+    echo ""
 fi
 
 # Check Docker

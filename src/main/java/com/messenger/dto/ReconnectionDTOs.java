@@ -112,7 +112,7 @@ public class ReconnectionDTOs {
         private boolean success;
         private String conferenceId;
         private String participantId;
-        private byte[][] frames;           // Буферизированные фреймы
+        private String[] frames;           // Base64 encoded frames
         private long lastSequence;         // Последний sequence number
         private int totalFrames;           // Общее количество фреймов
     }

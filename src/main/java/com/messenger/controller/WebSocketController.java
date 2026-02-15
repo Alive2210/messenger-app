@@ -4,6 +4,8 @@ import com.messenger.dto.*;
 import com.messenger.service.MessageService;
 import com.messenger.service.ReactionService;
 import com.messenger.service.VideoConferenceService;
+import com.messenger.service.VideoStreamBuffer;
+import com.messenger.service.VideoReconnectService;
 import com.messenger.service.WebRtcConfigurationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +31,8 @@ public class WebSocketController {
     private final VideoConferenceService videoConferenceService;
     private final WebRtcConfigurationService webRtcConfigurationService;
     private final ReactionService reactionService;
+    private final VideoStreamBuffer videoStreamBuffer;
+    private final VideoReconnectService videoReconnectService;
 
     /**
      * Handle text messages
@@ -156,12 +161,25 @@ public class WebSocketController {
                                SimpMessageHeaderAccessor headerAccessor) {
         try {
             UUID conferenceId = UUID.fromString(request.getConferenceId());
+            String sessionId = headerAccessor.getSessionId();
+            
             var participant = videoConferenceService.joinConference(
                     conferenceId, 
                     principal.getName(),
                     request.isVideoEnabled(),
                     request.isAudioEnabled()
             );
+
+            // Register video session for reconnection support
+            videoReconnectService.registerVideoSession(
+                    sessionId,
+                    request.getConferenceId(),
+                    principal.getName(),
+                    request.getDeviceId() != null ? request.getDeviceId() : "default"
+            );
+            
+            log.info("🎥 Video session registered for {} in conference {}", 
+                    principal.getName(), request.getConferenceId());
 
             // Notify all conference participants
             messagingTemplate.convertAndSend(
@@ -190,10 +208,25 @@ public class WebSocketController {
      * Handle leaving conference
      */
     @MessageMapping("/conference.leave")
-    public void leaveConference(@Payload LeaveConferenceRequest request, Principal principal) {
+    public void leaveConference(@Payload LeaveConferenceRequest request, 
+                                Principal principal,
+                                SimpMessageHeaderAccessor headerAccessor) {
         try {
             UUID conferenceId = UUID.fromString(request.getConferenceId());
+            String sessionId = headerAccessor.getSessionId();
+            
             videoConferenceService.leaveConference(conferenceId, principal.getName());
+
+            // Handle video disconnection with grace period
+            videoReconnectService.handleVideoDisconnection(
+                    sessionId,
+                    request.getConferenceId(),
+                    principal.getName(),
+                    "user_left"
+            );
+            
+            log.info("🔌 Video session disconnected for {} in conference {}. Grace period started.",
+                    principal.getName(), request.getConferenceId());
 
             messagingTemplate.convertAndSend(
                     "/topic/conference/" + request.getConferenceId(),
@@ -207,6 +240,99 @@ public class WebSocketController {
         } catch (Exception e) {
             log.error("Error leaving conference", e);
         }
+    }
+    
+    /**
+     * Handle video session reconnection
+     */
+    @MessageMapping("/video.reconnect")
+    public void handleVideoReconnection(@Payload VideoReconnectionRequest request,
+                                        Principal principal,
+                                        SimpMessageHeaderAccessor headerAccessor) {
+        try {
+            String newSessionId = headerAccessor.getSessionId();
+            
+            boolean success = videoReconnectService.confirmVideoReconnection(
+                    request.getOldSessionId(),
+                    newSessionId,
+                    request.getConferenceId(),
+                    principal.getName()
+            );
+            
+            if (success) {
+                // Notify about successful reconnection
+                messagingTemplate.convertAndSend(
+                        "/topic/conference/" + request.getConferenceId(),
+                        new ConferenceEventDTO(
+                                "PARTICIPANT_RECONNECTED",
+                                null,
+                                principal.getName()
+                        )
+                );
+                
+                // Send video recovery response automatically
+                handleAutomaticVideoRecovery(request.getConferenceId(), principal);
+                
+                log.info("✅ Video session {} reconnected as {} for {}",
+                        request.getOldSessionId(), newSessionId, principal.getName());
+            } else {
+                // Grace period expired, need to rejoin
+                messagingTemplate.convertAndSendToUser(
+                        principal.getName(),
+                        "/queue/video-reconnect-failed",
+                        new ErrorDTO("Grace period expired. Please rejoin conference.")
+                );
+            }
+            
+        } catch (Exception e) {
+            log.error("Error handling video reconnection", e);
+            messagingTemplate.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/errors",
+                    new ErrorDTO("Reconnection failed: " + e.getMessage())
+            );
+        }
+    }
+    
+    private void handleAutomaticVideoRecovery(String conferenceId, Principal principal) {
+        // Automatically request video recovery for reconnected session
+        byte[][] frames = videoStreamBuffer.getLastFrames(conferenceId, principal.getName(), 30);
+        
+        if (frames.length > 0) {
+            String[] base64Frames = new String[frames.length];
+            for (int i = 0; i < frames.length; i++) {
+                base64Frames[i] = Base64.getEncoder().encodeToString(frames[i]);
+            }
+            
+            ReconnectionDTOs.VideoRecoveryResponse response = 
+                    ReconnectionDTOs.VideoRecoveryResponse.builder()
+                            .success(true)
+                            .conferenceId(conferenceId)
+                            .participantId(principal.getName())
+                            .frames(base64Frames)
+                            .totalFrames(frames.length)
+                            .lastSequence(System.currentTimeMillis())
+                            .build();
+            
+            messagingTemplate.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/video-recovery",
+                    response
+            );
+        }
+    }
+    
+    /**
+     * DTO for video reconnection request
+     */
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    @lombok.Builder
+    public static class VideoReconnectionRequest {
+        private String oldSessionId;
+        private String conferenceId;
+        private String deviceId;
     }
 
     /**
@@ -391,5 +517,166 @@ public class WebSocketController {
                     new ErrorDTO("Failed to toggle reaction: " + e.getMessage())
             );
         }
+    }
+
+    /**
+     * Handle incoming video frame for buffering
+     */
+    @MessageMapping("/video.frame")
+    public void handleVideoFrame(@Payload VideoFrameDTO frame, Principal principal) {
+        try {
+            log.trace("Received video frame from {} for conference {}", 
+                    principal.getName(), frame.getConferenceId());
+            
+            // Decode base64 frame data
+            byte[] frameData = Base64.getDecoder().decode(frame.getFrameData());
+            
+            // Add to buffer
+            videoStreamBuffer.addFrame(
+                    frame.getConferenceId(),
+                    principal.getName(),
+                    frameData,
+                    frame.getTimestamp()
+            );
+            
+            // Forward to target participant if specified
+            if (frame.getTargetUserId() != null) {
+                messagingTemplate.convertAndSendToUser(
+                        frame.getTargetUserId(),
+                        "/queue/video",
+                        frame
+                );
+            }
+            
+        } catch (Exception e) {
+            log.error("Error handling video frame", e);
+        }
+    }
+
+    /**
+     * Request video stream recovery after connection interruption
+     */
+    @MessageMapping("/video.recover")
+    public void recoverVideoStream(@Payload ReconnectionDTOs.VideoRecoveryRequest request, 
+                                   Principal principal) {
+        try {
+            log.info("Video recovery request from {} for conference {}", 
+                    principal.getName(), request.getConferenceId());
+            
+            // Get buffered frames from the requested sequence
+            byte[][] frames = videoStreamBuffer.getFrames(
+                    request.getConferenceId(),
+                    request.getParticipantId(),
+                    request.getFromSequence()
+            );
+            
+            if (frames.length == 0) {
+                // Try to get last frames if no frames from requested sequence
+                frames = videoStreamBuffer.getLastFrames(
+                        request.getConferenceId(),
+                        request.getParticipantId(),
+                        30 // Last 30 frames (~1 second)
+                );
+            }
+            
+            // Convert frames to base64
+            String[] base64Frames = new String[frames.length];
+            for (int i = 0; i < frames.length; i++) {
+                base64Frames[i] = Base64.getEncoder().encodeToString(frames[i]);
+            }
+            
+            // Get buffer status
+            VideoStreamBuffer.BufferStatus status = videoStreamBuffer.getStatus(
+                    request.getConferenceId(),
+                    request.getParticipantId()
+            );
+            
+            ReconnectionDTOs.VideoRecoveryResponse response = 
+                    ReconnectionDTOs.VideoRecoveryResponse.builder()
+                            .success(frames.length > 0)
+                            .conferenceId(request.getConferenceId())
+                            .participantId(request.getParticipantId())
+                            .frames(base64Frames)
+                            .totalFrames(frames.length)
+                            .lastSequence(status != null ? status.getLastSequenceNumber() : 0)
+                            .build();
+            
+            messagingTemplate.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/video-recovery",
+                    response
+            );
+            
+            log.info("Sent {} frames for recovery to {}", frames.length, principal.getName());
+            
+        } catch (Exception e) {
+            log.error("Error recovering video stream", e);
+            messagingTemplate.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/errors",
+                    new ErrorDTO("Failed to recover video: " + e.getMessage())
+            );
+        }
+    }
+
+    /**
+     * Get buffer status for debugging
+     */
+    @MessageMapping("/video.buffer-status")
+    public void getBufferStatus(@Payload VideoBufferStatusRequest request, Principal principal) {
+        try {
+            VideoStreamBuffer.BufferStatus status = videoStreamBuffer.getStatus(
+                    request.getConferenceId(),
+                    request.getParticipantId()
+            );
+            
+            messagingTemplate.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/buffer-status",
+                    status != null ? status : new ErrorDTO("Buffer not found")
+            );
+            
+        } catch (Exception e) {
+            log.error("Error getting buffer status", e);
+        }
+    }
+
+    /**
+     * Handle connection interruption - client signals network issues
+     */
+    @MessageMapping("/connection.interrupted")
+    public void handleConnectionInterrupted(@Payload ReconnectionDTOs.ConnectionInterrupted event,
+                                           Principal principal) {
+        log.warn("Connection interrupted for {}: {}", principal.getName(), event.getReason());
+        
+        // Store state for potential recovery
+        // Buffer remains active for reconnection window
+    }
+
+    /**
+     * DTO for video frame
+     */
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    @lombok.Builder
+    public static class VideoFrameDTO {
+        private String conferenceId;
+        private String targetUserId;
+        private String frameData; // Base64 encoded
+        private long timestamp;
+        private long sequenceNumber;
+        private String codec;
+    }
+
+    /**
+     * DTO for buffer status request
+     */
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class VideoBufferStatusRequest {
+        private String conferenceId;
+        private String participantId;
     }
 }

@@ -15,4 +15,5 @@ public class JoinConferenceRequest {
     private String conferenceId;
     private boolean videoEnabled;
     private boolean audioEnabled;
+    private String deviceId;
 }

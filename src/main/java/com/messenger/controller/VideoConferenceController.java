@@ -3,6 +3,8 @@ package com.messenger.controller;
 import com.messenger.dto.*;
 import com.messenger.entity.VideoConference;
 import com.messenger.service.VideoConferenceService;
+import com.messenger.service.VideoStreamBuffer;
+import com.messenger.service.VideoReconnectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
 public class VideoConferenceController {
 
     private final VideoConferenceService conferenceService;
+    private final VideoStreamBuffer videoStreamBuffer;
+    private final VideoReconnectService videoReconnectService;
 
     @PostMapping("/chats/{chatId}")
     public ResponseEntity<ConferenceDTO> createConference(
@@ -76,6 +80,11 @@ public class VideoConferenceController {
         
         log.info("Ending conference {} by {}", conferenceId, userDetails.getUsername());
         conferenceService.endConference(conferenceId, userDetails.getUsername());
+        
+        // Clear all video buffers and sessions for this conference
+        videoStreamBuffer.clearConferenceBuffers(conferenceId.toString());
+        videoReconnectService.removeConferenceSessions(conferenceId.toString());
+        log.info("Cleared all video buffers and sessions for conference {}", conferenceId);
         
         return ResponseEntity.ok().build();
     }

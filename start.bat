@@ -6,12 +6,23 @@ echo    MESSENGER SERVER - QUICK START
 echo ========================================
 echo.
 
-:: Check if .env exists
+:: Check if .env exists - if not, run install first
 if not exist ".env" (
-    echo [ERROR] .env file not found!
-    echo Please run install.bat first to set up the environment.
-    pause
-    exit /b 1
+    echo [INFO] .env file not found! Running installation first...
+    echo.
+    if exist "install.bat" (
+        call install.bat
+        if %errorLevel% neq 0 (
+            echo [ERROR] Installation failed!
+            pause
+            exit /b 1
+        )
+    ) else (
+        echo [ERROR] install.bat not found!
+        pause
+        exit /b 1
+    )
+    echo.
 )
 
 :: Check Docker
