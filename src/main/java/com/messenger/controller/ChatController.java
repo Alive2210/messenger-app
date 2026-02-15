@@ -1,6 +1,6 @@
 package com.messenger.controller;
 
-import com.messenger.dto.*;
+import com.messenger.dto.ChatDTOs.*;
 import com.messenger.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

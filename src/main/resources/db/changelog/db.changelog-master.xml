@@ -241,4 +241,43 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="10" author="messenger">
+        <createTable tableName="devices">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_device_user" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="device_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="device_name" type="VARCHAR(255)"/>
+            <column name="device_type" type="VARCHAR(20)"/>
+            <column name="os_version" type="VARCHAR(50)"/>
+            <column name="app_version" type="VARCHAR(50)"/>
+            <column name="push_token" type="VARCHAR(500)"/>
+            <column name="is_online" type="BOOLEAN" defaultValue="false"/>
+            <column name="last_seen" type="TIMESTAMP"/>
+            <column name="last_heartbeat" type="TIMESTAMP"/>
+            <column name="ip_address" type="VARCHAR(45)"/>
+            <column name="connection_settings" type="TEXT"/>
+            <column name="is_active" type="BOOLEAN" defaultValue="true"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+        
+        <createIndex tableName="devices" indexName="idx_devices_user">
+            <column name="user_id"/>
+        </createIndex>
+        
+        <createIndex tableName="devices" indexName="idx_devices_online">
+            <column name="is_online"/>
+        </createIndex>
+        
+        <createIndex tableName="devices" indexName="idx_devices_heartbeat">
+            <column name="last_heartbeat"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

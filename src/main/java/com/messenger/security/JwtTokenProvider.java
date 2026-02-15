@@ -42,6 +42,22 @@ public class JwtTokenProvider {
         return buildToken(extraClaims, username, jwtExpirationInMs);
     }
 
+    public String generateTokenForDevice(String username, String deviceId) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("deviceId", deviceId);
+        extraClaims.put("type", "device");
+        return buildToken(extraClaims, username, jwtExpirationInMs);
+    }
+
+    public String extractDeviceId(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.get("deviceId", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public String generateRefreshToken(String username) {
         return buildToken(new HashMap<>(), username, refreshTokenExpirationInMs);
     }

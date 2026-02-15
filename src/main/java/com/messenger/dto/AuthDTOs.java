@@ -41,6 +41,13 @@ public class AuthDTOs {
 
         @NotBlank(message = "Password is required")
         private String password;
+        
+        // Device information (optional)
+        private String deviceId;
+        private String deviceName;
+        private String deviceType;
+        private String osVersion;
+        private String appVersion;
     }
 
     @Data

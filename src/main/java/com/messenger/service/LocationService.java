@@ -5,7 +5,7 @@ import com.messenger.dto.LocationShareResponse;
 import com.messenger.entity.Message;
 import com.messenger.entity.Chat;
 import com.messenger.entity.User;
-import com.messenger.entity.MessageType;
+import com.messenger.entity.Message.MessageType;
 import com.messenger.repository.ChatRepository;
 import com.messenger.repository.MessageRepository;
 import com.messenger.repository.UserRepository;
@@ -35,7 +35,7 @@ public class LocationService {
         Message msg = Message.builder()
             .chat(chat)
             .sender(user)
-            .messageType(com.messenger.entity.MessageType.LOCATION)
+            .messageType(Message.MessageType.LOCATION)
             .locationLat(lat)
             .locationLng(lon)
             .locationLabel(label)

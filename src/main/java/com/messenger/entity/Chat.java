@@ -60,6 +60,7 @@ public class Chat {
     public enum ChatType {
         PERSONAL,      // One-on-one chat
         GROUP,         // Group chat
-        CHANNEL        // Channel (read-only for subscribers)
+        CHANNEL,       // Channel (read-only for subscribers)
+        FAVORITES      // Special chat for saving favorites/notes
     }
 }

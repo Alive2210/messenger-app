@@ -154,6 +154,66 @@ class JwtTokenProviderTest {
         assertEquals("testuser", subject);
     }
 
+    @Test
+    @DisplayName("Should generate token with device ID")
+    void shouldGenerateTokenWithDeviceId() {
+        String deviceId = "device-123-abc";
+        
+        String token = tokenProvider.generateTokenForDevice("testuser", deviceId);
+        
+        assertNotNull(token);
+        assertTrue(tokenProvider.validateToken(token));
+        
+        String extractedDeviceId = tokenProvider.extractDeviceId(token);
+        assertEquals(deviceId, extractedDeviceId);
+    }
+
+    @Test
+    @DisplayName("Should extract device ID from token")
+    void shouldExtractDeviceIdFromToken() {
+        String deviceId = "my-device-id";
+        String token = tokenProvider.generateTokenForDevice("testuser", deviceId);
+        
+        String extractedDeviceId = tokenProvider.extractDeviceId(token);
+        
+        assertEquals(deviceId, extractedDeviceId);
+    }
+
+    @Test
+    @DisplayName("Should return null device ID for token without device claim")
+    void shouldReturnNullDeviceIdForTokenWithoutDeviceClaim() {
+        Authentication auth = createAuthentication("testuser");
+        String token = tokenProvider.generateToken(auth);
+        
+        String extractedDeviceId = tokenProvider.extractDeviceId(token);
+        
+        assertNull(extractedDeviceId);
+    }
+
+    @Test
+    @DisplayName("Should validate token with device ID")
+    void shouldValidateTokenWithDeviceId() {
+        String token = tokenProvider.generateTokenForDevice("testuser", "device-123");
+        
+        boolean isValid = tokenProvider.validateToken(token);
+        String username = tokenProvider.getUsernameFromToken(token);
+        
+        assertTrue(isValid);
+        assertEquals("testuser", username);
+    }
+
+    @Test
+    @DisplayName("Should generate different tokens for different devices")
+    void shouldGenerateDifferentTokensForDifferentDevices() {
+        String token1 = tokenProvider.generateTokenForDevice("testuser", "device-1");
+        String token2 = tokenProvider.generateTokenForDevice("testuser", "device-2");
+        
+        assertNotEquals(token1, token2);
+        
+        assertEquals("device-1", tokenProvider.extractDeviceId(token1));
+        assertEquals("device-2", tokenProvider.extractDeviceId(token2));
+    }
+
     private Authentication createAuthentication(String username) {
         return new UsernamePasswordAuthenticationToken(
                 new org.springframework.security.core.userdetails.User(

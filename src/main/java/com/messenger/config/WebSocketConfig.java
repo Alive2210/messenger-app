@@ -80,26 +80,40 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
                 
-                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String token = extractToken(accessor);
-                    
-                    if (token != null && jwtTokenProvider.validateToken(token)) {
-                        String username = jwtTokenProvider.getUsernameFromToken(token);
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (accessor != null) {
+                    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                        String token = extractToken(accessor);
                         
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities()
-                                );
-                        
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        accessor.setUser(authentication);
-                        log.info("WebSocket user connected: {}", username);
-                    } else {
-                        log.error("Invalid JWT token for WebSocket connection");
-                        throw new IllegalArgumentException("Invalid JWT token");
+                        if (token != null && jwtTokenProvider.validateToken(token)) {
+                            String username = jwtTokenProvider.getUsernameFromToken(token);
+                            String deviceId = jwtTokenProvider.extractDeviceId(token);
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                            
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(
+                                            userDetails,
+                                            null,
+                                            userDetails.getAuthorities()
+                                    );
+                            
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                            accessor.setUser(authentication);
+                            
+                            // Store device ID in session attributes
+                            if (deviceId != null) {
+                                accessor.getSessionAttributes().put("deviceId", deviceId);
+                            }
+                            
+                            log.info("WebSocket user connected: {} (device: {})", username, deviceId);
+                        } else {
+                            log.error("Invalid JWT token for WebSocket connection");
+                            throw new IllegalArgumentException("Invalid JWT token");
+                        }
+                    } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+                        String username = accessor.getUser() != null ? accessor.getUser().getName() : "unknown";
+                        String deviceId = accessor.getSessionAttributes() != null ? 
+                                (String) accessor.getSessionAttributes().get("deviceId") : null;
+                        log.info("WebSocket user disconnected: {} (device: {})", username, deviceId);
                     }
                 }
                 

@@ -88,6 +88,22 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# Device Management
+device:
+  heartbeat:
+    timeout: 2 # Minutes without heartbeat before marking device as offline (reduced for 10s checks)
+    interval: 10 # Expected heartbeat interval in seconds
+  settings:
+    max-devices-per-user: 10
+    allow-multiple-devices: true
+
+# Application URLs for QR codes
+app:
+  server:
+    url: ${SERVER_URL:http://localhost:8080}
+  websocket:
+    url: ${WEBSOCKET_URL:/ws}
+
 # Actuator
 management:
   endpoints:

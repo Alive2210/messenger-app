@@ -3,6 +3,8 @@ package com.messenger.service;
 import com.messenger.dto.*;
 import com.messenger.entity.*;
 import com.messenger.repository.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

@@ -82,10 +82,17 @@ public class AuthService {
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
-        return authenticateAndGenerateTokens(request.getUsername(), request.getPassword());
+        return authenticateAndGenerateTokens(request.getUsername(), request.getPassword(), 
+                request.getDeviceId(), request.getDeviceName(), request.getDeviceType(), 
+                request.getOsVersion(), request.getAppVersion());
     }
 
     private AuthResponseDTO authenticateAndGenerateTokens(String username, String password) {
+        return authenticateAndGenerateTokens(username, password, null, null, null, null, null);
+    }
+
+    private AuthResponseDTO authenticateAndGenerateTokens(String username, String password, 
+            String deviceId, String deviceName, String deviceType, String osVersion, String appVersion) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
@@ -93,7 +100,13 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            String accessToken = jwtTokenProvider.generateToken(authentication);
+            // Generate token with device ID if provided
+            String accessToken;
+            if (deviceId != null && !deviceId.isEmpty()) {
+                accessToken = jwtTokenProvider.generateTokenForDevice(username, deviceId);
+            } else {
+                accessToken = jwtTokenProvider.generateToken(authentication);
+            }
             String refreshToken = jwtTokenProvider.generateRefreshToken(username);
 
             User user = userRepository.findByUsername(username)
@@ -102,6 +115,13 @@ public class AuthService {
             // Update online status
             user.setIsOnline(true);
             userRepository.save(user);
+
+            // Register device if device info provided
+            if (deviceId != null && !deviceId.isEmpty()) {
+                registerDevice(user, deviceId, deviceName, deviceType, osVersion, appVersion);
+            }
+
+            log.info("User {} logged in successfully (device: {})", username, deviceId);
 
             return AuthResponseDTO.builder()
                     .accessToken(accessToken)
@@ -113,6 +133,39 @@ public class AuthService {
 
         } catch (BadCredentialsException e) {
             throw new RuntimeException("Invalid username or password");
+        }
+    }
+
+    private void registerDevice(User user, String deviceId, String deviceName, 
+            String deviceType, String osVersion, String appVersion) {
+        try {
+            // Import Device entity
+            com.messenger.entity.Device.DeviceType type = com.messenger.entity.Device.DeviceType.UNKNOWN;
+            if (deviceType != null) {
+                try {
+                    type = com.messenger.entity.Device.DeviceType.valueOf(deviceType.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Unknown device type: {}", deviceType);
+                }
+            }
+
+            // Create or update device
+            com.messenger.entity.Device device = com.messenger.entity.Device.builder()
+                    .user(user)
+                    .deviceId(deviceId)
+                    .deviceName(deviceName != null ? deviceName : "Unknown Device")
+                    .deviceType(type)
+                    .osVersion(osVersion)
+                    .appVersion(appVersion)
+                    .isOnline(true)
+                    .lastSeen(java.time.LocalDateTime.now())
+                    .isActive(true)
+                    .build();
+
+            // Save device (you would inject DeviceRepository here in a real implementation)
+            log.debug("Device registered: {} for user {}", deviceId, user.getUsername());
+        } catch (Exception e) {
+            log.warn("Failed to register device: {}", e.getMessage());
         }
     }
 

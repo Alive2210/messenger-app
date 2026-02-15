@@ -174,4 +174,24 @@ public class NetworkAutoConfiguration {
     private String detectPrivateIp() { return null; }
 
     private String detectPublicIp() { return null; }
+    
+    public String generateTurnUrl() {
+        return "turn:" + (publicIp != null ? publicIp : localIp) + ":3478";
+    }
+    
+    public String generateTurnsUrl() {
+        return "turns:" + (publicIp != null ? publicIp : localIp) + ":5349";
+    }
+    
+    public String getBestTurnIp() {
+        return publicIp != null ? publicIp : localIp;
+    }
+    
+    public String getBestClientIp() {
+        return publicIp != null ? publicIp : localIp;
+    }
+    
+    public String getBestIp() {
+        return publicIp != null ? publicIp : localIp;
+    }
 }
