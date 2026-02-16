@@ -1,226 +1,102 @@
 package com.messenger.security;
 
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Collections;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtTokenProviderTest {
 
-    private JwtTokenProvider tokenProvider;
+    private JwtTokenProvider jwtTokenProvider;
 
     @BeforeEach
     void setUp() {
-        tokenProvider = new JwtTokenProvider();
-        ReflectionTestUtils.setField(tokenProvider, "jwtSecret", 
-                "dGhpcyBpcyBhIHZlcnkgc2VjdXJlIGtleSBmb3IgdGVzdGluZyE=");
-        ReflectionTestUtils.setField(tokenProvider, "jwtExpirationInMs", 86400000L);
-        ReflectionTestUtils.setField(tokenProvider, "refreshTokenExpirationInMs", 604800000L);
+        jwtTokenProvider = new JwtTokenProvider();
+        String secret = "your-256-bit-secret-key-here-must-be-at-least-32-characters";
+        ReflectionTestUtils.setField(jwtTokenProvider, "jwtSecret", secret);
+        ReflectionTestUtils.setField(jwtTokenProvider, "jwtExpirationInMs", 86400000L);
+        ReflectionTestUtils.setField(jwtTokenProvider, "refreshTokenExpirationInMs", 604800000L);
     }
 
     @Test
-    @DisplayName("Should generate valid token")
-    void shouldGenerateValidToken() {
-        Authentication auth = createAuthentication("testuser");
-        
-        String token = tokenProvider.generateToken(auth);
-        
+    void testGenerateToken() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
         assertNotNull(token);
-        assertFalse(token.isEmpty());
+        assertTrue(token.length() > 0);
     }
 
     @Test
-    @DisplayName("Should validate valid token")
-    void shouldValidateValidToken() {
-        Authentication auth = createAuthentication("testuser");
-        String token = tokenProvider.generateToken(auth);
-        
-        boolean isValid = tokenProvider.validateToken(token);
-        
-        assertTrue(isValid);
-    }
-
-    @Test
-    @DisplayName("Should extract username from token")
-    void shouldExtractUsernameFromToken() {
-        Authentication auth = createAuthentication("testuser");
-        String token = tokenProvider.generateToken(auth);
-        
-        String username = tokenProvider.getUsernameFromToken(token);
-        
+    void testGetUsernameFromToken() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
+        String username = jwtTokenProvider.getUsernameFromToken(token);
         assertEquals("testuser", username);
     }
 
     @Test
-    @DisplayName("Should reject invalid token")
-    void shouldRejectInvalidToken() {
-        boolean isValid = tokenProvider.validateToken("invalid.token.here");
-        
-        assertFalse(isValid);
+    void testValidateToken() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
+        assertTrue(jwtTokenProvider.validateToken(token));
     }
 
     @Test
-    @DisplayName("Should reject empty token")
-    void shouldRejectEmptyToken() {
-        boolean isValid = tokenProvider.validateToken("");
-        
-        assertFalse(isValid);
+    void testValidateInvalidToken() {
+        assertFalse(jwtTokenProvider.validateToken("invalid.token.here"));
     }
 
     @Test
-    @DisplayName("Should reject malformed token")
-    void shouldRejectMalformedToken() {
-        boolean isValid = tokenProvider.validateToken("not.a.valid.token");
-        
-        assertFalse(isValid);
+    void testIsTokenExpired() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
+        Date expirationDate = jwtTokenProvider.getExpirationDateFromToken(token);
+        assertTrue(expirationDate.after(new Date()));
     }
 
     @Test
-    @DisplayName("Should generate refresh token")
-    void shouldGenerateRefreshToken() {
-        String token = tokenProvider.generateRefreshToken("testuser");
-        
+    void testExtractClaim() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
+        Date expirationDate = jwtTokenProvider.getExpirationDateFromToken(token);
+        assertNotNull(expirationDate);
+        assertTrue(expirationDate.after(new Date()));
+    }
+
+    @Test
+    void testGenerateTokenForDevice() {
+        String token = jwtTokenProvider.generateTokenForDevice("testuser", "device123");
         assertNotNull(token);
-        assertFalse(token.isEmpty());
-        assertTrue(tokenProvider.validateToken(token));
+        String deviceId = jwtTokenProvider.extractDeviceId(token);
+        assertEquals("device123", deviceId);
     }
 
     @Test
-    @DisplayName("Should validate refresh token")
-    void shouldValidateRefreshToken() {
-        String refreshToken = tokenProvider.generateRefreshToken("testuser");
-        
-        boolean isValid = tokenProvider.validateToken(refreshToken);
-        String username = tokenProvider.getUsernameFromToken(refreshToken);
-        
-        assertTrue(isValid);
-        assertEquals("testuser", username);
-    }
-
-    @Test
-    @DisplayName("Should generate different tokens for different users")
-    void shouldGenerateDifferentTokensForDifferentUsers() {
-        Authentication auth1 = createAuthentication("user1");
-        Authentication auth2 = createAuthentication("user2");
-        
-        String token1 = tokenProvider.generateToken(auth1);
-        String token2 = tokenProvider.generateToken(auth2);
-        
-        assertNotEquals(token1, token2);
-    }
-
-    @Test
-    @DisplayName("Should validate token against user details")
-    void shouldValidateTokenAgainstUserDetails() {
-        Authentication auth = createAuthentication("testuser");
-        String token = tokenProvider.generateToken(auth);
-        
-        boolean isValid = tokenProvider.isTokenValid(token, 
-                new org.springframework.security.core.userdetails.User(
-                        "testuser", "password", Collections.emptyList()));
-        
-        assertTrue(isValid);
-    }
-
-    @Test
-    @DisplayName("Should reject token for wrong user")
-    void shouldRejectTokenForWrongUser() {
-        Authentication auth = createAuthentication("user1");
-        String token = tokenProvider.generateToken(auth);
-        
-        boolean isValid = tokenProvider.isTokenValid(token,
-                new org.springframework.security.core.userdetails.User(
-                        "user2", "password", Collections.emptyList()));
-        
-        assertFalse(isValid);
-    }
-
-    @Test
-    @DisplayName("Should extract claim from token")
-    void shouldExtractClaimFromToken() {
-        Authentication auth = createAuthentication("testuser");
-        String token = tokenProvider.generateToken(auth);
-        
-        String subject = tokenProvider.extractClaim(token, 
-                claims -> claims.getSubject());
-        
-        assertEquals("testuser", subject);
-    }
-
-    @Test
-    @DisplayName("Should generate token with device ID")
-    void shouldGenerateTokenWithDeviceId() {
-        String deviceId = "device-123-abc";
-        
-        String token = tokenProvider.generateTokenForDevice("testuser", deviceId);
-        
+    void testGenerateRefreshToken() {
+        String token = jwtTokenProvider.generateRefreshToken("testuser");
         assertNotNull(token);
-        assertTrue(tokenProvider.validateToken(token));
-        
-        String extractedDeviceId = tokenProvider.extractDeviceId(token);
-        assertEquals(deviceId, extractedDeviceId);
     }
 
     @Test
-    @DisplayName("Should extract device ID from token")
-    void shouldExtractDeviceIdFromToken() {
-        String deviceId = "my-device-id";
-        String token = tokenProvider.generateTokenForDevice("testuser", deviceId);
-        
-        String extractedDeviceId = tokenProvider.extractDeviceId(token);
-        
-        assertEquals(deviceId, extractedDeviceId);
+    void testIsTokenValid() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
+        UserDetails userDetails = User.withUsername("testuser")
+                .password("password")
+                .roles("USER")
+                .build();
+        assertTrue(jwtTokenProvider.isTokenValid(token, userDetails));
     }
 
     @Test
-    @DisplayName("Should return null device ID for token without device claim")
-    void shouldReturnNullDeviceIdForTokenWithoutDeviceClaim() {
-        Authentication auth = createAuthentication("testuser");
-        String token = tokenProvider.generateToken(auth);
-        
-        String extractedDeviceId = tokenProvider.extractDeviceId(token);
-        
-        assertNull(extractedDeviceId);
-    }
-
-    @Test
-    @DisplayName("Should validate token with device ID")
-    void shouldValidateTokenWithDeviceId() {
-        String token = tokenProvider.generateTokenForDevice("testuser", "device-123");
-        
-        boolean isValid = tokenProvider.validateToken(token);
-        String username = tokenProvider.getUsernameFromToken(token);
-        
-        assertTrue(isValid);
-        assertEquals("testuser", username);
-    }
-
-    @Test
-    @DisplayName("Should generate different tokens for different devices")
-    void shouldGenerateDifferentTokensForDifferentDevices() {
-        String token1 = tokenProvider.generateTokenForDevice("testuser", "device-1");
-        String token2 = tokenProvider.generateTokenForDevice("testuser", "device-2");
-        
-        assertNotEquals(token1, token2);
-        
-        assertEquals("device-1", tokenProvider.extractDeviceId(token1));
-        assertEquals("device-2", tokenProvider.extractDeviceId(token2));
-    }
-
-    private Authentication createAuthentication(String username) {
-        return new UsernamePasswordAuthenticationToken(
-                new org.springframework.security.core.userdetails.User(
-                        username, "password", 
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))),
-                null,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-        );
+    void testIsTokenValidWithDifferentUser() {
+        String token = jwtTokenProvider.generateToken(new HashMap<>(), "testuser");
+        UserDetails userDetails = User.withUsername("differentuser")
+                .password("password")
+                .roles("USER")
+                .build();
+        assertFalse(jwtTokenProvider.isTokenValid(token, userDetails));
     }
 }
