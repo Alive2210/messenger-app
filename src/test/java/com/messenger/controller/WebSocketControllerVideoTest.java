@@ -1,8 +1,8 @@
 package com.messenger.controller;
 
 import com.messenger.dto.*;
-import com.messenger.service.VideoReconnectService;
-import com.messenger.service.VideoStreamBuffer;
+import com.messenger.entity.ConferenceParticipant;
+import com.messenger.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +37,18 @@ class WebSocketControllerVideoTest {
 
     @Mock
     private VideoReconnectService videoReconnectService;
+
+    @Mock
+    private MessageService messageService;
+
+    @Mock
+    private VideoConferenceService videoConferenceService;
+
+    @Mock
+    private WebRtcConfigurationService webRtcConfigurationService;
+
+    @Mock
+    private ReactionService reactionService;
 
     @Mock
     private Principal principal;
@@ -89,24 +101,25 @@ class WebSocketControllerVideoTest {
     @DisplayName("Should register video session on conference join")
     void shouldRegisterVideoSessionOnConferenceJoin() {
         // Given
+        String conferenceId = UUID.randomUUID().toString();
         JoinConferenceRequest request = new JoinConferenceRequest();
-        request.setConferenceId(UUID.randomUUID().toString());
+        request.setConferenceId(conferenceId);
         request.setVideoEnabled(true);
         request.setAudioEnabled(true);
         request.setDeviceId("device-1");
+        
+        // Mock the conference service to return a participant
+        ConferenceParticipant participant = new ConferenceParticipant();
+        when(videoConferenceService.joinConference(any(), eq("test-user"), eq(true), eq(true)))
+                .thenReturn(participant);
 
-        // When - this will fail because videoConferenceService is not mocked,
-        // but we can verify the videoReconnectService was called before the exception
-        try {
-            webSocketController.joinConference(request, principal, headerAccessor);
-        } catch (Exception e) {
-            // Expected - videoConferenceService is not mocked
-        }
+        // When
+        webSocketController.joinConference(request, principal, headerAccessor);
 
         // Then
         verify(videoReconnectService).registerVideoSession(
                 eq("test-session-id"),
-                eq(request.getConferenceId()),
+                eq(conferenceId),
                 eq("test-user"),
                 eq("device-1")
         );
@@ -116,20 +129,20 @@ class WebSocketControllerVideoTest {
     @DisplayName("Should start grace period on conference leave")
     void shouldStartGracePeriodOnConferenceLeave() {
         // Given
+        String conferenceId = UUID.randomUUID().toString();
         LeaveConferenceRequest request = new LeaveConferenceRequest();
-        request.setConferenceId(UUID.randomUUID().toString());
+        request.setConferenceId(conferenceId);
+        
+        // Mock the conference service
+        doNothing().when(videoConferenceService).leaveConference(any(), eq("test-user"));
 
         // When
-        try {
-            webSocketController.leaveConference(request, principal, headerAccessor);
-        } catch (Exception e) {
-            // Expected - videoConferenceService is not mocked
-        }
+        webSocketController.leaveConference(request, principal, headerAccessor);
 
         // Then
         verify(videoReconnectService).handleVideoDisconnection(
                 eq("test-session-id"),
-                eq(request.getConferenceId()),
+                eq(conferenceId),
                 eq("test-user"),
                 eq("user_left")
         );
