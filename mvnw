@@ -17,7 +17,7 @@ while [ -h "$PRG" ] ; do
     fi
 done
 SAVED="`pwd`"
-cd "`dirname \"$PRG\"`/.." >/dev/null
+cd "`dirname \"$PRG\"`" >/dev/null
 APP_HOME="`pwd -P`"
 cd "$SAVED" >/dev/null
 
@@ -107,5 +107,6 @@ if [ "$cygwin" = "true" ]; then
 fi
 
 exec "$JAVACMD" $JAVA_OPTS \
+  -Dmaven.multiModuleProjectDirectory="$APP_HOME" \
   -classpath "$CLASSPATH" \
   org.apache.maven.wrapper.MavenWrapperMain "$@"

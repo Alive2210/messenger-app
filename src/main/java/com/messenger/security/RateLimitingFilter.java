@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     // Конфигурация лимитов
-    private static final int DEFAULT_MAX_REQUESTS = 100; // запросов
+    private static final int DEFAULT_MAX_REQUESTS = 1000; // запросов
     private static final Duration DEFAULT_WINDOW = Duration.ofMinutes(1); // в минуту
-    private static final int AUTH_MAX_REQUESTS = 10; // для auth endpoints
+    private static final int AUTH_MAX_REQUESTS = 100; // для auth endpoints
     private static final Duration AUTH_WINDOW = Duration.ofMinutes(1);
-    private static final int BLOCK_DURATION_MINUTES = 15; // время блокировки
+    private static final int BLOCK_DURATION_MINUTES = 5; // время блокировки
 
     // Хранилище счетчиков запросов по IP
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
@@ -48,6 +48,14 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         
         String clientIp = getClientIP(request);
         String path = request.getRequestURI();
+        
+        // Разрешаем localhost без ограничений
+        if ("0:0:0:0:0:0:0:1".equals(clientIp) || "127.0.0.1".equals(clientIp) || 
+            "localhost".equals(clientIp) || clientIp.startsWith("192.168.") ||
+            clientIp.startsWith("10.") || clientIp.startsWith("172.16.") || clientIp.startsWith("172.17.") || clientIp.startsWith("172.18.")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         
         // Проверяем, не заблокирован ли IP
         if (isBlocked(clientIp)) {

@@ -24,4 +24,10 @@ public interface VideoConferenceRepository extends JpaRepository<VideoConference
 
     @Query("SELECT vc FROM VideoConference vc WHERE vc.status = 'ACTIVE' AND vc.createdAt < :threshold")
     List<VideoConference> findStaleActiveConferences(@Param("threshold") java.time.LocalDateTime threshold);
+
+    @Query("SELECT vc FROM VideoConference vc WHERE vc.initiator.id = :userId AND vc.status = 'ENDED' ORDER BY vc.endedAt DESC")
+    List<VideoConference> findEndedConferencesByInitiator(@Param("userId") UUID userId);
+
+    @Query("SELECT vc FROM VideoConference vc WHERE vc.status = 'ENDED' AND vc.initiator.id != :userId AND EXISTS (SELECT 1 FROM vc.chat.userChats uc WHERE uc.user.id = :userId)")
+    List<VideoConference> findMissedCallsForUser(@Param("userId") UUID userId);
 }

@@ -1,5 +1,6 @@
 package com.messenger.service;
 
+import com.messenger.dto.ChatDTOs;
 import com.messenger.dto.ChatDTOs.*;
 import com.messenger.dto.MessageDTO;
 import com.messenger.entity.*;
@@ -168,12 +169,58 @@ public class ChatService {
                 .orElseGet(() -> {
                     // Create new personal chat
                     CreateChatRequest request = CreateChatRequest.builder()
-                            .chatName(user2.getUsername()) // Chat name = other user's name
+                            .chatName(user2.getUsername())
                             .chatType(Chat.ChatType.PERSONAL.name())
                             .participantUsernames(List.of(username2))
                             .build();
                     return createChat(request, username1);
                 });
+    }
+
+    @Transactional
+    @CacheEvict(value = "userChats", key = "#username")
+    public void deleteChat(UUID chatId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Chat chat = chatRepository.findById(chatId)
+                .orElseThrow(() -> new RuntimeException("Chat not found"));
+
+        UserChat membership = userChatRepository.findByUserIdAndChatId(user.getId(), chatId)
+                .orElseThrow(() -> new RuntimeException("User is not a member of this chat"));
+
+        if (!membership.getIsAdmin()) {
+            throw new RuntimeException("Only admins can delete chats");
+        }
+
+        List<UserChat> allMemberships = userChatRepository.findByChatId(chatId);
+        userChatRepository.deleteAll(allMemberships);
+
+        List<Message> messages = messageRepository.findByChatId(chatId);
+        messageRepository.deleteAll(messages);
+
+        chatRepository.delete(chat);
+        log.info("Chat {} deleted by {}", chatId, username);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContactDTO> getContacts(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<User> allUsers = userRepository.findAll().stream()
+                .filter(u -> !u.getId().equals(user.getId()))
+                .collect(Collectors.toList());
+
+        return allUsers.stream()
+                .map(u -> ContactDTO.builder()
+                        .userId(u.getId().toString())
+                        .username(u.getUsername())
+                        .avatarUrl(u.getAvatarUrl())
+                        .isOnline(u.getIsOnline())
+                        .statusMessage(u.getStatusMessage())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private ChatDTO mapToDTO(Chat chat, UUID currentUserId) {
@@ -198,8 +245,8 @@ public class ChatService {
             lastMessage = mapToMessageDTO(lastMessages.get(0));
         }
 
-        // Count unread messages (TODO: implement proper count method)
-        long unreadCount = 0; // Temporary fix
+        // Count unread messages
+        long unreadCount = messageStatusRepository.countUnreadByUserIdAndChatId(currentUserId, chat.getId());
 
         return ChatDTO.builder()
                 .id(chat.getId())

@@ -7,9 +7,6 @@ server:
     mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
 
 spring:
-  profiles:
-    active: prod
-  
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:messenger_db}
     username: ${DB_USERNAME:messenger_user}
@@ -165,6 +162,9 @@ logging:
 
 # Management / Actuator
 management:
+  health:
+    redis:
+      enabled: false
   endpoints:
     web:
       exposure:

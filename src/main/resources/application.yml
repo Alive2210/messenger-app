@@ -113,3 +113,9 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+# VAPID keys for push notifications (placeholder values)
+vapid:
+  public-key: BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U
+  private-key: UUxI4O8-FbRouAf7-7OT9lYq3Z9t3kU5jK8nV7wX2yA
+  subject: mailto:admin@example.com

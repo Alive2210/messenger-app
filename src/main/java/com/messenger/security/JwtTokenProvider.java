@@ -29,8 +29,7 @@ public class JwtTokenProvider {
     private long refreshTokenExpirationInMs;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
     public String generateToken(Authentication authentication) {

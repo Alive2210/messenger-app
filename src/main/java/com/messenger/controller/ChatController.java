@@ -1,7 +1,9 @@
 package com.messenger.controller;
 
 import com.messenger.dto.ChatDTOs.*;
+import com.messenger.dto.MessageDTO;
 import com.messenger.service.ChatService;
+import com.messenger.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class ChatController {
 
     private final ChatService chatService;
+    private final MessageService messageService;
 
     @PostMapping
     public ResponseEntity<ChatDTO> createChat(
@@ -35,6 +38,14 @@ public class ChatController {
             @AuthenticationPrincipal UserDetails userDetails) {
         List<ChatDTO> chats = chatService.getUserChats(userDetails.getUsername());
         return ResponseEntity.ok(chats);
+    }
+
+    @GetMapping("/contacts")
+    public ResponseEntity<List<ContactDTO>> getContacts(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Getting contacts for user {}", userDetails.getUsername());
+        List<ContactDTO> contacts = chatService.getContacts(userDetails.getUsername());
+        return ResponseEntity.ok(contacts);
     }
 
     @GetMapping("/{chatId}")
@@ -69,5 +80,25 @@ public class ChatController {
             @AuthenticationPrincipal UserDetails userDetails) {
         ChatDTO chat = chatService.getOrCreatePersonalChat(userDetails.getUsername(), username);
         return ResponseEntity.ok(chat);
+    }
+
+    @GetMapping("/{chatId}/messages")
+    public ResponseEntity<List<MessageDTO>> getChatMessages(
+            @PathVariable UUID chatId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Getting messages for chat {} by user {}", chatId, userDetails.getUsername());
+        List<MessageDTO> messages = messageService.getChatMessages(chatId, userDetails.getUsername(), page, size);
+        return ResponseEntity.ok(messages);
+    }
+
+    @DeleteMapping("/{chatId}")
+    public ResponseEntity<Void> deleteChat(
+            @PathVariable UUID chatId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Deleting chat {} by user {}", chatId, userDetails.getUsername());
+        chatService.deleteChat(chatId, userDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 }

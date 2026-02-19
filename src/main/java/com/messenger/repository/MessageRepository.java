@@ -15,6 +15,8 @@ import java.util.UUID;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
+    List<Message> findByChatId(UUID chatId);
+
     Page<Message> findByChatIdAndIsDeletedFalse(UUID chatId, Pageable pageable);
 
     List<Message> findByChatIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID chatId);

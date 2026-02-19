@@ -1,6 +1,9 @@
 # Multi-stage build for production
 FROM eclipse-temurin:17-jdk-alpine AS builder
 
+# Install wget for Maven wrapper
+RUN apk add --no-cache wget
+
 WORKDIR /build
 
 # Copy Maven files first for better caching
@@ -8,13 +11,13 @@ COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 
 # Download dependencies
-RUN ./mvnw dependency:go-offline -B
+RUN ./mvnw dependency:go-offline -B -Dmaven.multiModuleProjectDirectory=/build
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN ./mvnw clean package -DskipTests -B \
+RUN ./mvnw clean package -DskipTests -B -Dmaven.multiModuleProjectDirectory=/build \
     && mkdir -p target/dependency \
     && (cd target/dependency; jar -xf ../*.jar)
 

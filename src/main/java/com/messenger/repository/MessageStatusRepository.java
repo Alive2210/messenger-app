@@ -25,4 +25,7 @@ public interface MessageStatusRepository extends JpaRepository<MessageStatus, UU
                                                                   @Param("status") MessageStatus.MessageDeliveryStatus status);
 
     long countByMessageChatIdAndStatus(UUID chatId, MessageStatus.MessageDeliveryStatus status);
+
+    @Query("SELECT COUNT(ms) FROM MessageStatus ms WHERE ms.user.id = :userId AND ms.message.chat.id = :chatId AND ms.status != 'READ'")
+    long countUnreadByUserIdAndChatId(@Param("userId") UUID userId, @Param("chatId") UUID chatId);
 }

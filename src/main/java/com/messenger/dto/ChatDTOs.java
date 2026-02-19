@@ -66,4 +66,16 @@ public class ChatDTOs {
         private LocalDateTime joinedAt;
         private Boolean isOnline;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ContactDTO {
+        private String userId;
+        private String username;
+        private String avatarUrl;
+        private Boolean isOnline;
+        private String statusMessage;
+    }
 }

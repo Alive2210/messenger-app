@@ -194,4 +194,28 @@ public class VideoConferenceService {
 
         log.info("Conference {} ended by {}", conferenceId, username);
     }
+
+    @Transactional(readOnly = true)
+    public List<VideoConference> getMissedCalls(String username) {
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            List<VideoConference> calls = conferenceRepository.findMissedCallsForUser(user.getId());
+            log.debug("Found {} missed calls for user {}", calls.size(), username);
+            return calls;
+        } catch (Exception e) {
+            log.error("Error getting missed calls for user {}: {}", username, e.getMessage());
+            throw new RuntimeException("Failed to get missed calls", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public long getMissedCallsCount(String username) {
+        try {
+            return getMissedCalls(username).size();
+        } catch (Exception e) {
+            log.error("Error getting missed calls count for user {}: {}", username, e.getMessage());
+            return 0;
+        }
+    }
 }

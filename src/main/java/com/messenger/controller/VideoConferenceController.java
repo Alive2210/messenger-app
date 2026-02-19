@@ -97,6 +97,28 @@ public class VideoConferenceController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/missed")
+    public ResponseEntity<List<ConferenceDTO>> getMissedCalls(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        log.info("Getting missed calls for user {}", userDetails.getUsername());
+        var missedCalls = conferenceService.getMissedCalls(userDetails.getUsername());
+        
+        List<ConferenceDTO> dtoList = missedCalls.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(dtoList);
+    }
+
+    @GetMapping("/missed/count")
+    public ResponseEntity<Long> getMissedCallsCount(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        long count = conferenceService.getMissedCallsCount(userDetails.getUsername());
+        return ResponseEntity.ok(count);
+    }
+
     private ConferenceDTO mapToDTO(VideoConference conference) {
         return ConferenceDTO.builder()
                 .id(conference.getId())

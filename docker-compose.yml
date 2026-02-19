@@ -121,12 +121,17 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-messenger_pass}
       DB_NAME: ${DB_NAME:-messenger_db}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-messenger_db}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      
+      # Redis
+      REDIS_HOST: redis
+      SPRING_REDIS_HOST: redis
       
       # MinIO
       MINIO_ENDPOINT: http://minio:9000
@@ -136,9 +141,14 @@ services:
       # JWT
       JWT_SECRET: ${JWT_SECRET:-default-secret-key-change-in-production}
       
+      # VAPID (Web Push)
+      vapid.public-key: ${VAPID_PUBLIC_KEY:-}
+      vapid.private-key: ${VAPID_PRIVATE_KEY:-}
+      vapid.subject: ${VAPID_SUBJECT:-mailto:admin@example.com}
+      
       # Application
       SERVER_PORT: 8080
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
     volumes:
@@ -153,7 +163,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # Nginx Reverse Proxy (optional)
+  # Nginx Reverse Proxy with Frontend
   nginx:
     image: nginx:alpine
     container_name: messenger-nginx
@@ -161,15 +171,12 @@ services:
       - app
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./messenger-client/dist:/usr/share/nginx/html:ro
     networks:
       - messenger-network
     restart: unless-stopped
-    profiles:
-      - with-nginx
 
 volumes:
   postgres_data:
