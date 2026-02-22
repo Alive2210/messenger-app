@@ -3,7 +3,8 @@ package com.messenger.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,10 +15,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "messages", indexes = {
-    @Index(name = "idx_chat_created", columnList = "chat_id, created_at"),
-    @Index(name = "idx_sender", columnList = "sender_id")
+        @Index(name = "idx_chat_created", columnList = "chat_id, created_at"),
+        @Index(name = "idx_sender", columnList = "sender_id"),
+        @Index(name = "idx_client_msg_id", columnList = "client_message_id")
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,6 +29,9 @@ public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "client_message_id")
+    private String clientMessageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id", nullable = false)
@@ -62,9 +68,11 @@ public class Message {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Builder.Default
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
+    @Builder.Default
     @Column(name = "is_edited")
     private Boolean isEdited = false;
 
@@ -77,6 +85,7 @@ public class Message {
     @Column(name = "location_label")
     private String locationLabel;
 
+    @Builder.Default
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
     private Set<MessageStatus> messageStatuses = new HashSet<>();
 

@@ -20,4 +20,5 @@ public class SendMessageRequest {
     private UUID replyToMessageId;
     private FileAttachmentDTO fileAttachment;
     private VoiceMessageDTO voiceMessage;
+    private String clientMessageId;
 }

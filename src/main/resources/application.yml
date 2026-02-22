@@ -2,6 +2,10 @@ server:
   port: 8080
 
 spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   application:
     name: secure-messenger
   
@@ -46,8 +50,8 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 1024MB
+      max-request-size: 1024MB
 
 # JWT Configuration
 jwt:

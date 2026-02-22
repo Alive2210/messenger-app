@@ -3,7 +3,8 @@ package com.messenger.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -12,9 +13,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "user_chats", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "chat_id"})
+        @UniqueConstraint(columnNames = { "user_id", "chat_id" })
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

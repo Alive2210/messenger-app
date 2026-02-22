@@ -9,13 +9,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -24,6 +26,18 @@ public class FileStorageService {
 
     private final MinioClient minioClient;
     private final AudioProcessingService audioProcessingService;
+
+    private final Map<String, UploadSession> uploadSessions = new ConcurrentHashMap<>();
+    private static final String TEMP_UPLOAD_DIR = "./temp-uploads/";
+
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    private static class UploadSession {
+        private String fileName;
+        private String userId;
+        private int totalChunks;
+        private Set<Integer> uploadedChunks;
+    }
 
     @Value("${minio.bucket-name:messenger-files}")
     private String bucketName;
@@ -166,5 +180,99 @@ public class FileStorageService {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
         return String.format("files/%s/%s%s", userId, UUID.randomUUID(), extension);
+    }
+
+    // --- Resumable Upload Implementation ---
+
+    public String initResumableUpload(String fileName, String userId, int totalChunks) {
+        String sessionId = UUID.randomUUID().toString();
+        uploadSessions.put(sessionId, new UploadSession(fileName, userId, totalChunks, ConcurrentHashMap.newKeySet()));
+
+        try {
+            Files.createDirectories(Paths.get(TEMP_UPLOAD_DIR, sessionId));
+        } catch (IOException e) {
+            log.error("Failed to create temp directory for upload", e);
+            throw new RuntimeException("Failed to initialize upload session");
+        }
+
+        return sessionId;
+    }
+
+    public boolean uploadChunk(String sessionId, int chunkIndex, MultipartFile file) {
+        UploadSession session = uploadSessions.get(sessionId);
+        if (session == null)
+            return false;
+
+        Path chunkPath = Paths.get(TEMP_UPLOAD_DIR, sessionId, "chunk_" + chunkIndex);
+        try {
+            Files.write(chunkPath, file.getBytes());
+            session.getUploadedChunks().add(chunkIndex);
+            return true;
+        } catch (IOException e) {
+            log.error("Failed to save chunk {} for session {}", chunkIndex, sessionId, e);
+            return false;
+        }
+    }
+
+    public List<Integer> getMissingChunks(String sessionId) {
+        UploadSession session = uploadSessions.get(sessionId);
+        if (session == null)
+            return Collections.emptyList();
+
+        return IntStream.range(0, session.getTotalChunks())
+                .filter(i -> !session.getUploadedChunks().contains(i))
+                .boxed()
+                .collect(Collectors.toList());
+    }
+
+    public String completeUpload(String sessionId, String userId) {
+        UploadSession session = uploadSessions.get(sessionId);
+        if (session == null)
+            throw new RuntimeException("Session not found");
+
+        if (!getMissingChunks(sessionId).isEmpty()) {
+            throw new RuntimeException("Not all chunks uploaded");
+        }
+
+        Path finalFilePath = Paths.get(TEMP_UPLOAD_DIR, sessionId, session.getFileName());
+        try (OutputStream out = new FileOutputStream(finalFilePath.toFile())) {
+            for (int i = 0; i < session.getTotalChunks(); i++) {
+                Path chunkPath = Paths.get(TEMP_UPLOAD_DIR, sessionId, "chunk_" + i);
+                Files.copy(chunkPath, out);
+                Files.delete(chunkPath);
+            }
+        } catch (IOException e) {
+            log.error("Failed to assemble chunks for session {}", sessionId, e);
+            throw new RuntimeException("Failed to complete upload");
+        }
+
+        // Upload to MinIO
+        try {
+            ensureBucketExists();
+            String minioFileName = generateFileName(session.getFileName(), userId);
+            String contentType = Files.probeContentType(finalFilePath);
+            if (contentType == null)
+                contentType = "application/octet-stream";
+
+            try (InputStream is = new FileInputStream(finalFilePath.toFile())) {
+                minioClient.putObject(
+                        PutObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(minioFileName)
+                                .stream(is, Files.size(finalFilePath), -1)
+                                .contentType(contentType)
+                                .build());
+            }
+
+            // Cleanup
+            Files.delete(finalFilePath);
+            Files.delete(Paths.get(TEMP_UPLOAD_DIR, sessionId));
+            uploadSessions.remove(sessionId);
+
+            return minioFileName;
+        } catch (Exception e) {
+            log.error("Failed to upload assembled file to MinIO", e);
+            throw new RuntimeException("Storage failure");
+        }
     }
 }

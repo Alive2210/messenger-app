@@ -3,7 +3,8 @@ package com.messenger.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,7 +15,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "chats")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -58,9 +60,9 @@ public class Chat {
     private Long version;
 
     public enum ChatType {
-        PERSONAL,      // One-on-one chat
-        GROUP,         // Group chat
-        CHANNEL,       // Channel (read-only for subscribers)
-        FAVORITES      // Special chat for saving favorites/notes
+        PERSONAL, // One-on-one chat
+        GROUP, // Group chat
+        CHANNEL, // Channel (read-only for subscribers)
+        FAVORITES // Special chat for saving favorites/notes
     }
 }

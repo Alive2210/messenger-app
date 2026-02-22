@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,17 @@ public class MessageService {
             throw new RuntimeException("User is not a member of this chat");
         }
 
+        // Check for idempotency if clientMessageId is provided
+        if (request.getClientMessageId() != null) {
+            Optional<Message> existing = messageRepository.findBySenderIdAndClientMessageId(sender.getId(),
+                    request.getClientMessageId());
+            if (existing.isPresent()) {
+                log.info("Duplicate message detected for clientMessageId: {}. Returning existing message.",
+                        request.getClientMessageId());
+                return mapToDTO(existing.get());
+            }
+        }
+
         // Create message
         Message.MessageType messageType = Message.MessageType.valueOf(request.getMessageType());
         Message message = Message.builder()
@@ -61,6 +73,7 @@ public class MessageService {
                 .messageType(messageType)
                 .encryptedContent(request.getEncryptedContent())
                 .encryptionIv(request.getEncryptionIv())
+                .clientMessageId(request.getClientMessageId())
                 .isDeleted(false)
                 .isEdited(false)
                 .createdAt(LocalDateTime.now())
@@ -100,7 +113,7 @@ public class MessageService {
             message.setVoiceMessage(voice);
         }
 
-        messageRepository.save(message);
+        message = messageRepository.save(message);
 
         // Create message statuses for all chat members
         List<UserChat> members = userChatRepository.findByChatId(chat.getId());
@@ -108,19 +121,19 @@ public class MessageService {
             MessageStatus status = MessageStatus.builder()
                     .message(message)
                     .user(member.getUser())
-                    .status(member.getUser().getId().equals(sender.getId()) 
-                            ? MessageStatus.MessageDeliveryStatus.READ 
+                    .status(member.getUser().getId().equals(sender.getId())
+                            ? MessageStatus.MessageDeliveryStatus.READ
                             : MessageStatus.MessageDeliveryStatus.SENT)
                     .build();
             messageStatusRepository.save(status);
         }
 
         // Send to RabbitMQ for async processing (notifications, etc.)
-        rabbitTemplate.convertAndSend(exchange, "message.sent", 
+        rabbitTemplate.convertAndSend(exchange, "message.sent",
                 new MessageEventDTO(message.getId(), chat.getId(), sender.getUsername()));
 
         log.info("Message sent: {} by {} to chat {}", message.getId(), username, chat.getId());
-        
+
         return mapToDTO(message);
     }
 
@@ -148,7 +161,7 @@ public class MessageService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<MessageStatus> unreadStatuses = messageStatusRepository
-                .findByUserIdAndMessageChatIdAndStatusNot(user.getId(), chatId, 
+                .findByUserIdAndMessageChatIdAndStatusNot(user.getId(), chatId,
                         MessageStatus.MessageDeliveryStatus.READ);
 
         for (MessageStatus status : unreadStatuses) {
@@ -162,13 +175,12 @@ public class MessageService {
                 .ifPresent(userChat -> {
                     if (!unreadStatuses.isEmpty()) {
                         userChat.setLastReadMessageId(
-                                unreadStatuses.get(unreadStatuses.size() - 1).getMessage().getId()
-                        );
+                                unreadStatuses.get(unreadStatuses.size() - 1).getMessage().getId());
                         userChatRepository.save(userChat);
                     }
                 });
 
-        log.info("Marked {} messages as read for user {} in chat {}", 
+        log.info("Marked {} messages as read for user {} in chat {}",
                 unreadStatuses.size(), username, chatId);
     }
 
@@ -194,8 +206,8 @@ public class MessageService {
                 .encryptionIv(message.getEncryptionIv())
                 .createdAt(message.getCreatedAt())
                 .isEdited(message.getIsEdited())
-                .replyToMessageId(message.getReplyToMessage() != null 
-                        ? message.getReplyToMessage().getId() 
+                .replyToMessageId(message.getReplyToMessage() != null
+                        ? message.getReplyToMessage().getId()
                         : null);
 
         if (message.getFileAttachment() != null) {
@@ -223,7 +235,7 @@ public class MessageService {
 
     @Data
     @AllArgsConstructor
-    private static class MessageEventDTO {
+    public static class MessageEventDTO {
         private UUID messageId;
         private UUID chatId;
         private String senderUsername;

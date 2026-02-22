@@ -23,6 +23,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final MessageService messageService;
+    private final com.messenger.service.QRCodeService qrCodeService;
 
     @PostMapping
     public ResponseEntity<ChatDTO> createChat(
@@ -31,6 +32,33 @@ public class ChatController {
         log.info("Creating chat by user: {}", userDetails.getUsername());
         ChatDTO chat = chatService.createChat(request, userDetails.getUsername());
         return ResponseEntity.ok(chat);
+    }
+
+    @PostMapping("/{chatId}/join")
+    public ResponseEntity<ChatDTO> joinChat(
+            @PathVariable UUID chatId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("User {} joining chat {} via QR/link", userDetails.getUsername(), chatId);
+        ChatDTO chat = chatService.joinChat(chatId, userDetails.getUsername());
+        return ResponseEntity.ok(chat);
+    }
+
+    @GetMapping("/{chatId}/qr-invite")
+    public ResponseEntity<java.util.Map<String, String>> getChatQRInvite(
+            @PathVariable UUID chatId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Generating QR invite for chat {} by user {}", chatId, userDetails.getUsername());
+        // Verify user is in chat before allowing them to generate invite
+        chatService.getChatById(chatId, userDetails.getUsername());
+
+        String inviteContent = "messenger://join-chat/" + chatId;
+        String qrCode = qrCodeService.generateQRCodeBase64(inviteContent);
+
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("qrCode", qrCode);
+        response.put("inviteLink", inviteContent);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
