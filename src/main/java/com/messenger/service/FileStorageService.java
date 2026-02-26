@@ -42,6 +42,9 @@ public class FileStorageService {
     @Value("${minio.bucket-name:messenger-files}")
     private String bucketName;
 
+    @Value("${minio.public-url:}")
+    private String minioPublicUrl;
+
     public String uploadFile(MultipartFile file, String userId) {
         try {
             ensureBucketExists();
@@ -115,14 +118,22 @@ public class FileStorageService {
     }
 
     public String getFileUrl(String fileName) {
+        log.info("getFileUrl called: minioPublicUrl={}, bucketName={}, fileName={}", minioPublicUrl, bucketName, fileName);
+        if (minioPublicUrl != null && !minioPublicUrl.isBlank()) {
+            String url = minioPublicUrl + "/" + bucketName + "/" + fileName;
+            log.info("Generated public URL: {}", url);
+            return url;
+        }
         try {
-            return minioClient.getPresignedObjectUrl(
+            String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
                             .bucket(bucketName)
                             .object(fileName)
                             .expiry(7, TimeUnit.DAYS)
                             .build());
+            log.info("Generated presigned URL: {}", url);
+            return url;
         } catch (Exception e) {
             log.error("Error generating file URL", e);
             throw new RuntimeException("Failed to generate file URL", e);

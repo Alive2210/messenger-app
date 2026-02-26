@@ -1,69 +1,28 @@
-@echo off
-:: Quick Start Script for Messenger Server
-
-echo ========================================
-echo    MESSENGER SERVER - QUICK START
-echo ========================================
-echo.
-
-:: Check if .env exists - if not, run install first
-if not exist ".env" (
-    echo [INFO] .env file not found! Running installation first...
-    echo.
-    if exist "install.bat" (
-        call install.bat
-        if %errorLevel% neq 0 (
-            echo [ERROR] Installation failed!
-            pause
-            exit /b 1
-        )
-    ) else (
-        echo [ERROR] install.bat not found!
-        pause
-        exit /b 1
-    )
-    echo.
-)
-
-:: Check Docker
-docker info >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [ERROR] Docker is not running!
-    echo Please start Docker Desktop first.
-    pause
-    exit /b 1
-)
-
-echo [INFO] Starting Messenger Server...
-echo.
-
-:: Start services
-docker-compose up -d
-
-if %errorLevel% neq 0 (
-    echo [ERROR] Failed to start services!
-    pause
-    exit /b 1
-)
-
-echo.
-echo [INFO] Waiting for services to be ready...
-timeout /t 10 /nobreak >nul
-
-echo.
-echo ========================================
-echo    SERVER STARTED SUCCESSFULLY
-echo ========================================
-echo.
-echo Access URLs:
-echo   - Application:     http://localhost:8080
-echo   - Health Check:    http://localhost:8080/actuator/health
-echo   - RabbitMQ:        http://localhost:15672 (guest/guest)
-echo   - MinIO Console:   http://localhost:9001 (minioadmin/minioadmin)
-echo.
-echo Useful commands:
-echo   - View logs:       docker-compose logs -f
-echo   - Stop server:     docker-compose down
-echo   - Restart:         docker-compose restart
-echo.
-pause
+@echo off  
+echo ========================================  
+Messenger App - Выбор режима  
+========================================  
+  
+1. SMALL режим - NAS / 1-2 пользователя  
+2. LARGE режим - Сервер / 30-40 пользователей  
+3. Выход  
+  
+set /p choice="Выберите режим (1-3): " 
+if "%choice%"=="1" goto small  
+if "%choice%"=="2" goto large  
+if "%choice%"=="3" goto end  
+goto menu  
+  
+:small  
+call start-small.bat  
+goto end  
+  
+:large  
+call start-large.bat  
+goto end  
+  
+:menu  
+goto :EOF  
+  
+:end  
+pause 

@@ -186,7 +186,12 @@ public class WebSocketController {
                     "/topic/conference/" + request.getConferenceId(),
                     new ConferenceEventDTO(
                             "PARTICIPANT_JOINED",
-                            participant,
+                            Map.of(
+                                "userId", participant.getUser().getId().toString(),
+                                "username", participant.getUser().getUsername(),
+                                "isVideoEnabled", participant.getIsVideoEnabled(),
+                                "isAudioEnabled", participant.getIsAudioEnabled()
+                            ),
                             principal.getName()
                     )
             );

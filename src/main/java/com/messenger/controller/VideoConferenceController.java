@@ -8,11 +8,13 @@ import com.messenger.service.VideoReconnectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,7 @@ public class VideoConferenceController {
     private final VideoConferenceService conferenceService;
     private final VideoStreamBuffer videoStreamBuffer;
     private final VideoReconnectService videoReconnectService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping("/chats/{chatId}")
     public ResponseEntity<ConferenceDTO> createConference(
@@ -40,7 +43,34 @@ public class VideoConferenceController {
                 VideoConference.ConferenceType.valueOf(type.toUpperCase())
         );
         
-        return ResponseEntity.ok(mapToDTO(conference));
+        ConferenceDTO dto = mapToDTO(conference);
+        
+        IncomingCallDTO callNotification = new IncomingCallDTO(
+                conference.getId().toString(),
+                conference.getRoomId(),
+                userDetails.getUsername(),
+                conference.getConferenceType().name(),
+                "INCOMING"
+        );
+        
+        messagingTemplate.convertAndSend(
+                "/topic/chat/" + chatId + "/call",
+                callNotification
+        );
+        
+        log.info("Call notification sent to chat topic {}", chatId);
+        
+        return ResponseEntity.ok(dto);
+    }
+
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    public static class IncomingCallDTO {
+        private String conferenceId;
+        private String roomId;
+        private String callerUsername;
+        private String callType;
+        private String status;
     }
 
     @GetMapping("/{conferenceId}")
@@ -80,6 +110,16 @@ public class VideoConferenceController {
         
         log.info("Ending conference {} by {}", conferenceId, userDetails.getUsername());
         conferenceService.endConference(conferenceId, userDetails.getUsername());
+        
+        // Send CONFERENCE_ENDED event to all participants
+        messagingTemplate.convertAndSend(
+                "/topic/conference/" + conferenceId,
+                new ConferenceEventDTO(
+                        "CONFERENCE_ENDED",
+                        null,
+                        userDetails.getUsername()
+                )
+        );
         
         // Clear all video buffers and sessions for this conference
         videoStreamBuffer.clearConferenceBuffers(conferenceId.toString());

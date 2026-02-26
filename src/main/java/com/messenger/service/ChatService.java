@@ -2,7 +2,9 @@ package com.messenger.service;
 
 import com.messenger.dto.ChatDTOs;
 import com.messenger.dto.ChatDTOs.*;
+import com.messenger.dto.FileAttachmentDTO;
 import com.messenger.dto.MessageDTO;
+import com.messenger.dto.VoiceMessageDTO;
 import com.messenger.entity.*;
 import com.messenger.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -301,6 +303,30 @@ public class ChatService {
         }
 
         private MessageDTO mapToMessageDTO(Message message) {
+                FileAttachmentDTO fileAttachmentDTO = null;
+                if (message.getFileAttachment() != null) {
+                        FileAttachment fa = message.getFileAttachment();
+                        fileAttachmentDTO = FileAttachmentDTO.builder()
+                                        .fileName(fa.getFileName())
+                                        .fileType(fa.getFileType())
+                                        .fileSize(fa.getFileSize())
+                                        .fileUrl(fa.getFileUrl())
+                                        .thumbnailUrl(fa.getThumbnailUrl())
+                                        .build();
+                }
+
+                VoiceMessageDTO voiceMessageDTO = null;
+                if (message.getVoiceMessage() != null) {
+                        VoiceMessage vm = message.getVoiceMessage();
+                        voiceMessageDTO = VoiceMessageDTO.builder()
+                                        .audioUrl(vm.getAudioUrl())
+                                        .durationSeconds(vm.getDurationSeconds())
+                                        .fileSize(vm.getFileSize())
+                                        .mimeType(vm.getMimeType())
+                                        .waveformData(vm.getWaveformData())
+                                        .build();
+                }
+
                 return MessageDTO.builder()
                                 .id(message.getId())
                                 .chatId(message.getChat().getId())
@@ -310,6 +336,8 @@ public class ChatService {
                                 .encryptedContent(message.getEncryptedContent())
                                 .encryptionIv(message.getEncryptionIv())
                                 .createdAt(message.getCreatedAt())
+                                .fileAttachment(fileAttachmentDTO)
+                                .voiceMessage(voiceMessageDTO)
                                 .build();
         }
 }

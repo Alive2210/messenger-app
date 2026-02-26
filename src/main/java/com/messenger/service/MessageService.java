@@ -226,6 +226,7 @@ public class MessageService {
                     .audioUrl(fileStorageService.getFileUrl(voice.getAudioUrl()))
                     .durationSeconds(voice.getDurationSeconds())
                     .fileSize(voice.getFileSize())
+                    .mimeType(voice.getMimeType())
                     .waveformData(voice.getWaveformData())
                     .build());
         }
