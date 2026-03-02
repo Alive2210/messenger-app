@@ -14,11 +14,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-messenger_user} -d ${DB_NAME:-messenger_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - messenger-network
     restart: unless-stopped
@@ -35,11 +30,6 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - messenger-network
     restart: unless-stopped
@@ -57,29 +47,17 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - messenger-network
     restart: unless-stopped
 
-  # Create MinIO bucket on startup
+  # Create MinIO bucket
   minio-init:
     image: minio/mc:latest
     depends_on:
-      minio:
-        condition: service_healthy
+      - minio
     entrypoint: >
-      /bin/sh -c "
-      sleep 10;
-      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin};
-      /usr/bin/mc mb myminio/messenger-files || true;
-      /usr/bin/mc policy set public myminio/messenger-files || true;
-      exit 0;
-      "
+      /bin/sh -c " sleep 10; /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin}; /usr/bin/mc mb myminio/messenger-files || true; /usr/bin/mc policy set public myminio/messenger-files || true; exit 0; "
     networks:
       - messenger-network
 
@@ -91,11 +69,6 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - messenger-network
     restart: unless-stopped
@@ -107,14 +80,10 @@ services:
       dockerfile: Dockerfile
     container_name: messenger-app
     depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - rabbitmq
+      - minio
+      - redis
     environment:
       # Database
       DB_USERNAME: ${DB_USERNAME:-messenger_user}
@@ -122,49 +91,37 @@ services:
       DB_NAME: ${DB_NAME:-messenger_db}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-messenger_db}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      
+
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
-      
+
       # Redis
       REDIS_HOST: redis
       SPRING_REDIS_HOST: redis
-      
+
       # MinIO
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_URL: http://localhost:9000
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-      
+
       # JWT
       JWT_SECRET: ${JWT_SECRET:-default-secret-key-change-in-production}
-      
-      # VAPID (Web Push)
-      vapid.public-key: ${VAPID_PUBLIC_KEY:-}
-      vapid.private-key: ${VAPID_PRIVATE_KEY:-}
-      vapid.subject: ${VAPID_SUBJECT:-mailto:admin@example.com}
-      
+
       # Application
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: prod
-    ports:
-      - "8080:8080"
+      SERVER_URL: ${SERVER_URL:-http://localhost}
     volumes:
       - ./logs:/app/logs
     networks:
       - messenger-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
-  # Nginx Reverse Proxy with Frontend
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: messenger-nginx
@@ -172,8 +129,10 @@ services:
       - app
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/${NGINX_CONFIG:-nginx.dev.conf}:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./messenger-client/dist:/usr/share/nginx/html:ro
     networks:
       - messenger-network
@@ -181,13 +140,10 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
   rabbitmq_data:
-    driver: local
   minio_data:
-    driver: local
   redis_data:
-    driver: local
+
 
 networks:
   messenger-network:

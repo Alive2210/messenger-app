@@ -5,6 +5,7 @@ import com.messenger.encryption.EncryptionService;
 import com.messenger.entity.User;
 import com.messenger.logging.Auditable;
 import com.messenger.logging.MessengerLogger;
+import com.messenger.repository.DeviceRepository;
 import com.messenger.repository.UserRepository;
 import com.messenger.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import java.util.Base64;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final DeviceRepository deviceRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
@@ -36,7 +38,7 @@ public class AuthService {
     @Auditable(action = "USER_REGISTRATION")
     public AuthResponseDTO register(RegisterRequestDTO request) {
         log.debug("Starting user registration for: {}", request.getUsername());
-        
+
         // Check if username or email already exists
         if (userRepository.existsByUsername(request.getUsername())) {
             MessengerLogger.securityAuthFailure(request.getUsername(), "USERNAME_EXISTS", "unknown");
@@ -50,13 +52,13 @@ public class AuthService {
         // Generate RSA key pair for E2E encryption if not provided
         String publicKey = request.getPublicKey();
         String encryptedPrivateKey = null;
-        
+
         if (publicKey == null || publicKey.isEmpty()) {
             KeyPair keyPair = encryptionService.generateRSAKeyPair();
             publicKey = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
             // Encrypt private key with user's password for secure storage
             String privateKey = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
-            encryptedPrivateKey = encryptionService.encryptMessage(privateKey, 
+            encryptedPrivateKey = encryptionService.encryptMessage(privateKey,
                     encryptionService.generateAESKey());
         }
 
@@ -72,8 +74,8 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        
-        MessengerLogger.audit("USER_REGISTRATION", request.getUsername(), 
+
+        MessengerLogger.audit("USER_REGISTRATION", request.getUsername(),
                 "Email: " + request.getEmail());
         log.info("User registered successfully: {}", request.getUsername());
 
@@ -82,8 +84,8 @@ public class AuthService {
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
-        return authenticateAndGenerateTokens(request.getUsername(), request.getPassword(), 
-                request.getDeviceId(), request.getDeviceName(), request.getDeviceType(), 
+        return authenticateAndGenerateTokens(request.getUsername(), request.getPassword(),
+                request.getDeviceId(), request.getDeviceName(), request.getDeviceType(),
                 request.getOsVersion(), request.getAppVersion());
     }
 
@@ -91,12 +93,11 @@ public class AuthService {
         return authenticateAndGenerateTokens(username, password, null, null, null, null, null);
     }
 
-    private AuthResponseDTO authenticateAndGenerateTokens(String username, String password, 
+    private AuthResponseDTO authenticateAndGenerateTokens(String username, String password,
             String deviceId, String deviceName, String deviceType, String osVersion, String appVersion) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
-            );
+                    new UsernamePasswordAuthenticationToken(username, password));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -136,10 +137,9 @@ public class AuthService {
         }
     }
 
-    private void registerDevice(User user, String deviceId, String deviceName, 
+    private void registerDevice(User user, String deviceId, String deviceName,
             String deviceType, String osVersion, String appVersion) {
         try {
-            // Import Device entity
             com.messenger.entity.Device.DeviceType type = com.messenger.entity.Device.DeviceType.UNKNOWN;
             if (deviceType != null) {
                 try {
@@ -150,22 +150,23 @@ public class AuthService {
             }
 
             // Create or update device
-            com.messenger.entity.Device device = com.messenger.entity.Device.builder()
-                    .user(user)
-                    .deviceId(deviceId)
-                    .deviceName(deviceName != null ? deviceName : "Unknown Device")
-                    .deviceType(type)
-                    .osVersion(osVersion)
-                    .appVersion(appVersion)
-                    .isOnline(true)
-                    .lastSeen(java.time.LocalDateTime.now())
-                    .isActive(true)
-                    .build();
+            com.messenger.entity.Device device = deviceRepository.findByDeviceId(deviceId)
+                    .orElse(com.messenger.entity.Device.builder().deviceId(deviceId).build());
 
-            // Save device (you would inject DeviceRepository here in a real implementation)
-            log.debug("Device registered: {} for user {}", deviceId, user.getUsername());
+            device.setUser(user);
+            device.setDeviceName(deviceName != null ? deviceName : "Unknown Device");
+            device.setDeviceType(type);
+            device.setOsVersion(osVersion);
+            device.setAppVersion(appVersion);
+            device.setIsOnline(true);
+            device.setLastSeen(java.time.LocalDateTime.now());
+            device.setLastHeartbeat(java.time.LocalDateTime.now());
+            device.setIsActive(true);
+
+            deviceRepository.save(device);
+            log.debug("Device registered and saved: {} for user {}", deviceId, user.getUsername());
         } catch (Exception e) {
-            log.warn("Failed to register device: {}", e.getMessage());
+            log.error("Failed to register device: {}", e.getMessage(), e);
         }
     }
 
@@ -180,9 +181,7 @@ public class AuthService {
 
         String newAccessToken = jwtTokenProvider.generateToken(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        user.getUsername(), null, java.util.Collections.emptyList()
-                )
-        );
+                        user.getUsername(), null, java.util.Collections.emptyList()));
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(username);
 
         return AuthResponseDTO.builder()

@@ -12,11 +12,13 @@ import lombok.NoArgsConstructor;
 public class WebRTCSignalDTO {
     private String type;
     private String targetUserId;
-    private String senderId;
-    private Object payload;
+    // Use "sender" to match the client-side field name
+    private String sender;
+    // Use "data" to match the client-side field name
+    private Object data;
 
-    public WebRTCSignalDTO withSender(String sender) {
-        this.senderId = sender;
+    public WebRTCSignalDTO withSender(String senderName) {
+        this.sender = senderName;
         return this;
     }
 }

@@ -1,13 +1,704 @@
-2026-02-25 21:24:06.986 [main] INFO  [] [] c.m.SecureMessengerApplication - Starting SecureMessengerApplication using Java 17.0.18 with PID 1 (/app started by messenger in /app)
-2026-02-25 21:24:07.088 [main] INFO  [] [] c.m.SecureMessengerApplication - The following 1 profile is active: "prod"
-2026-02-25 21:24:14.808 [main] WARN  [] [] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-02-25 21:24:17.557 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@469caf69 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.582 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@1d628a88 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.611 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@3c634a04 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.617 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@4b48be5c (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.620 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@3fe8d57a (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.641 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@36573ec5 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.651 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@10c26161 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.662 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@1ef6977b (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.677 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@674cd2da (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
-2026-02-25 21:24:17.678 [main] WARN  [] [] com.zaxxer.hikari.pool.PoolBase - MessengerHikariPool - Failed to validate connection org.postgresql.jdbc.PgConnection@686279e0 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-03-01 18:35:54.663 [main] INFO  [] [] c.m.SecureMessengerApplication - Starting SecureMessengerApplication using Java 17.0.18 with PID 1 (/app started by messenger in /app)
+2026-03-01 18:35:54.723 [main] INFO  [] [] c.m.SecureMessengerApplication - The following 1 profile is active: "prod"
+2026-03-01 18:36:01.100 [main] WARN  [] [] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-01 18:36:04.244 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration - 🌐 Starting network auto-configuration...
+2026-03-01 18:36:04.246 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration - 📍 Local IP detected: 172.18.0.5
+2026-03-01 18:36:04.247 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration - 🏷️  Hostname: 7d71c2ba3f1b
+2026-03-01 18:36:04.248 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration - ✅ Network auto-configuration completed
+2026-03-01 18:36:04.250 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration -    Local:  172.18.0.5
+2026-03-01 18:36:04.252 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration -    VPN:    Not detected
+2026-03-01 18:36:04.259 [main] INFO  [] [] c.m.config.NetworkAutoConfiguration -    Public: Not detected
+2026-03-01 18:36:05.457 [main] INFO  [] [] com.messenger.config.MinioConfig - Initializing MinIO client with endpoint: http://minio:9000
+2026-03-01 18:36:05.632 [main] INFO  [] [] c.m.service.AudioProcessingService - 🎵 Audio Processing Service initialized
+2026-03-01 18:36:05.633 [main] INFO  [] [] c.m.service.AudioProcessingService -    Sample Rate: 48000 Hz
+2026-03-01 18:36:05.634 [main] INFO  [] [] c.m.service.AudioProcessingService -    Channels: 2
+2026-03-01 18:36:05.635 [main] INFO  [] [] c.m.service.AudioProcessingService -    Frame Size: 480 samples (10 ms)
+2026-03-01 18:36:05.637 [main] INFO  [] [] c.m.service.AudioProcessingService -    Features: Noise Suppression, Echo Cancellation, Limiter
+2026-03-01 18:36:05.773 [main] INFO  [] [] c.m.s.WebRtcConfigurationService - 🎥 WebRTC Configuration Service initialized
+2026-03-01 18:36:05.776 [main] INFO  [] [] c.m.s.WebRtcConfigurationService -    Best IP for TURN: 172.18.0.5
+2026-03-01 18:36:05.777 [main] INFO  [] [] c.m.s.WebRtcConfigurationService -    Best IP for clients: 172.18.0.5
+2026-03-01 18:36:06.875 [main] WARN  [] [] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-01 18:36:09.034 [main] INFO  [] [] c.m.SecureMessengerApplication - Started SecureMessengerApplication in 16.094 seconds (process running for 18.425)
+2026-03-01 18:36:09.172 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:36:10.912 [http-nio-8080-exec-1] WARN  [7bdb5a7a-aedc-405b-8b26-2fe0fe3cbbd3] [anonymous] o.s.w.s.h.HandlerMappingIntrospector - Cache miss for REQUEST dispatch to '/actuator/health' (previous null). Performing MatchableHandlerMapping lookup. This is logged once only at WARN level, and every time at TRACE.
+2026-03-01 18:36:19.035 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:36:29.033 [MessageBroker-2] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:36:39.033 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:36:49.035 [MessageBroker-3] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:36:59.041 [MessageBroker-2] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:37:09.031 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:37:19.028 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:37:29.028 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:37:39.028 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:37:49.026 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:37:59.026 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:38:09.026 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:38:19.024 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:38:29.031 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:38:39.026 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:38:49.023 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:38:59.023 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:39:09.022 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:39:19.020 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:39:29.020 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:39:39.021 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:39:49.019 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:39:59.023 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:40:09.019 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:40:19.018 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:40:29.018 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:40:39.017 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:40:49.017 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:40:59.016 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:41:09.016 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:41:19.015 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:41:29.015 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:41:39.017 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:41:49.012 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:41:59.012 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:42:09.028 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:42:19.011 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:42:29.013 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:42:39.012 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:42:49.010 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:42:59.009 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:43:09.010 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:43:19.005 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:43:29.004 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:43:39.014 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:43:49.006 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:43:59.007 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:44:09.005 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:44:19.003 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:44:29.003 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:44:39.003 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:44:49.002 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:44:59.001 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:45:09.002 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:45:19.001 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:45:29.001 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:45:39.003 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:45:48.999 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:45:58.999 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:46:08.999 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:46:18.997 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:46:28.997 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:46:38.998 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:46:48.995 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:46:58.995 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:47:08.995 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:47:18.993 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:47:28.994 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:47:38.995 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:47:48.992 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:47:58.992 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:48:08.992 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:48:18.990 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:48:28.991 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:48:38.991 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:48:48.988 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:48:58.988 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:49:08.988 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:49:18.987 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:49:28.987 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:49:38.987 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:49:48.998 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:49:58.987 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:50:08.986 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:50:18.984 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:50:28.984 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:50:38.984 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:50:48.981 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:50:58.988 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:51:08.981 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:51:18.980 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:51:28.980 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:51:38.980 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:51:48.980 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:51:58.979 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:52:08.980 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:52:18.977 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:52:28.977 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:52:38.979 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:52:48.976 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:52:58.975 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:53:08.976 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:53:18.974 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:53:28.974 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:53:38.974 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:53:48.972 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:53:58.977 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:54:08.972 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:54:18.971 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:54:28.971 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:54:38.970 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:54:48.969 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:54:58.969 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:55:08.968 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:55:18.966 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:55:28.967 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:55:38.972 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:55:48.965 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:55:58.965 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:56:08.965 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:56:18.964 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:56:28.963 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:56:38.965 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:56:48.959 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:56:58.959 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:57:08.959 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:57:18.955 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:57:28.954 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:57:38.954 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:57:48.953 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:57:58.953 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:58:08.953 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:58:18.962 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:58:28.952 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:58:38.951 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:58:48.951 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:58:58.959 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:59:08.950 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:59:18.949 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:59:28.949 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:59:38.949 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:59:48.947 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 18:59:58.947 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:00:08.947 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:00:18.947 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:00:28.946 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:00:38.949 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:00:48.944 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:00:58.945 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:01:08.946 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:01:18.942 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:01:28.942 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:01:38.943 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:01:48.947 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:01:58.942 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:02:08.942 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:02:18.940 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:02:28.940 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:02:38.940 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:02:48.939 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:02:58.940 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:03:08.939 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:03:18.939 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:03:28.938 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:03:38.943 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:03:48.937 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:03:58.938 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:04:08.938 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:04:18.939 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:04:28.935 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:04:38.935 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:04:48.934 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:04:58.933 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:05:08.933 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:05:18.935 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:05:28.932 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:05:38.933 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:05:48.933 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:05:58.932 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:06:08.930 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:06:18.929 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:06:28.931 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:06:38.931 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:06:48.927 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:06:58.928 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:07:08.927 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:07:18.927 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:07:28.928 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:07:38.931 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:07:48.928 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:07:58.925 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:08:08.925 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:08:18.922 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:08:28.923 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:08:38.926 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:08:48.921 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:08:58.923 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:09:08.921 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:09:18.920 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:09:28.920 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:09:38.920 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:09:48.918 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:09:58.918 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:10:08.920 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:10:18.918 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:10:28.922 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:10:38.918 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:10:48.917 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:10:58.917 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:11:08.917 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:11:18.914 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:11:28.923 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:11:38.914 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:11:48.913 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:11:58.913 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:12:08.912 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:12:18.912 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:12:28.912 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:12:38.912 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:12:48.910 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:12:58.913 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:13:08.913 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:13:18.909 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:13:28.909 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:13:38.909 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:13:48.905 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:13:58.908 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:14:08.906 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:14:18.908 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:14:28.906 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:14:38.906 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:14:48.905 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:14:58.905 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:15:08.904 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:15:18.902 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:15:28.902 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:15:38.903 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:15:48.901 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:15:58.902 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:16:08.901 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:16:18.900 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:16:28.918 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:16:38.900 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:16:48.899 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:16:58.898 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:17:08.898 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:17:18.896 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:17:28.897 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:17:38.897 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:17:48.898 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:17:58.897 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:18:08.905 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:18:18.894 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:18:28.894 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:18:38.895 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:18:48.894 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:18:58.904 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:19:08.892 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:19:18.891 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:19:28.895 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:19:38.891 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:19:49.020 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:19:58.888 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:20:08.893 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:20:18.889 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:20:28.891 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:20:38.907 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:20:48.891 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:20:58.900 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:21:08.890 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:21:18.876 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:21:28.885 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:21:38.888 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:21:48.890 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:21:58.878 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:22:08.879 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:22:18.883 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:22:28.876 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:22:38.874 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:22:48.874 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:22:58.872 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:23:08.874 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:23:18.872 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:23:28.872 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:23:38.873 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:23:48.874 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:23:58.875 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:24:08.878 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:24:18.867 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:24:28.867 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:24:38.867 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:24:48.867 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:24:58.873 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:25:08.873 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:25:18.863 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:25:28.864 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:25:38.864 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:25:48.863 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:25:58.870 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:26:08.871 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:26:18.862 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:26:28.861 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:26:38.869 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:26:48.863 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:26:58.860 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:27:08.860 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:27:18.860 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:27:28.860 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:27:38.858 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:27:48.852 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:27:58.851 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:28:08.861 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:28:18.851 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:28:28.850 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:28:38.852 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:28:48.850 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:28:58.850 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:29:08.850 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:29:18.853 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:29:28.854 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:29:38.848 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:29:48.847 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:29:58.848 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:30:08.855 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:30:18.846 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:30:28.848 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:30:38.847 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:30:48.846 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:30:58.846 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:31:08.850 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:31:18.844 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:31:28.843 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:31:38.848 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:31:48.837 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:31:58.838 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:32:08.837 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:32:18.836 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:32:28.841 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:32:38.841 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:32:48.839 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:32:58.836 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:33:08.835 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:33:18.836 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:33:28.835 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:33:38.837 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:33:48.831 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:33:58.830 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:34:08.830 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:34:18.829 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:34:28.830 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:34:38.841 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:34:48.812 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:34:58.815 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:35:08.810 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:35:18.873 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:35:28.823 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:35:38.829 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:35:48.842 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:35:58.822 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:36:08.821 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:36:18.823 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:36:28.821 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:36:38.821 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:36:48.825 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:36:58.822 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:37:08.819 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:37:18.820 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:37:28.822 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:37:38.820 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:37:48.817 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:37:58.817 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:38:08.816 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:38:18.817 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:38:28.816 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:38:38.816 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:38:48.818 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:38:58.814 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:39:08.814 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:39:18.820 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:39:28.812 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:39:38.813 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:39:48.814 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:39:58.812 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:40:08.811 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:40:18.810 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:40:28.810 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:40:38.810 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:40:48.810 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:40:58.809 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:41:08.811 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:41:18.807 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:41:28.822 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:41:38.810 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:41:48.805 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:41:58.807 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:42:08.805 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:42:18.803 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:42:28.803 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:42:38.804 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:42:48.801 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:42:58.802 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:43:08.803 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:43:18.802 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:43:28.801 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:43:32.100 [http-nio-8080-exec-2] ERROR [6933f447-8779-4ba3-b559-b433e575d033] [anonymous] c.m.exception.GlobalExceptionHandler - Unexpected error occurred
+org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'GET' is not supported
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.handleNoMatch(RequestMappingInfoHandlerMapping.java:265)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.lookupHandlerMethod(AbstractHandlerMethodMapping.java:441)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.getHandlerInternal(AbstractHandlerMethodMapping.java:382)
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.getHandlerInternal(RequestMappingInfoHandlerMapping.java:126)
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.getHandlerInternal(RequestMappingInfoHandlerMapping.java:68)
+	at org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(AbstractHandlerMapping.java:507)
+	at org.springframework.web.servlet.DispatcherServlet.getHandler(DispatcherServlet.java:1283)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1065)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
+	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340)
+	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128)
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at com.messenger.security.RateLimitingFilter.doFilterInternal(RateLimitingFilter.java:56)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at com.messenger.logging.MDCLoggingFilter.doFilterInternal(MDCLoggingFilter.java:56)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Unknown Source)
+2026-03-01 19:43:32.979 [http-nio-8080-exec-3] ERROR [7cf39b39-b231-47be-89b2-62c987c814f2] [anonymous] c.m.exception.GlobalExceptionHandler - Unexpected error occurred
+org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'GET' is not supported
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.handleNoMatch(RequestMappingInfoHandlerMapping.java:265)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.lookupHandlerMethod(AbstractHandlerMethodMapping.java:441)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodMapping.getHandlerInternal(AbstractHandlerMethodMapping.java:382)
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.getHandlerInternal(RequestMappingInfoHandlerMapping.java:126)
+	at org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping.getHandlerInternal(RequestMappingInfoHandlerMapping.java:68)
+	at org.springframework.web.servlet.handler.AbstractHandlerMapping.getHandler(AbstractHandlerMapping.java:507)
+	at org.springframework.web.servlet.DispatcherServlet.getHandler(DispatcherServlet.java:1283)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1065)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
+	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340)
+	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128)
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at com.messenger.security.RateLimitingFilter.doFilterInternal(RateLimitingFilter.java:56)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at com.messenger.logging.MDCLoggingFilter.doFilterInternal(MDCLoggingFilter.java:56)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Unknown Source)
+2026-03-01 19:43:38.802 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:43:48.803 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-01 19:43:58.799 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices

@@ -24,185 +24,217 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VideoConferenceController {
 
-    private final VideoConferenceService conferenceService;
-    private final VideoStreamBuffer videoStreamBuffer;
-    private final VideoReconnectService videoReconnectService;
-    private final SimpMessagingTemplate messagingTemplate;
+        private final VideoConferenceService conferenceService;
+        private final VideoStreamBuffer videoStreamBuffer;
+        private final VideoReconnectService videoReconnectService;
+        private final SimpMessagingTemplate messagingTemplate;
 
-    @PostMapping("/chats/{chatId}")
-    public ResponseEntity<ConferenceDTO> createConference(
-            @PathVariable UUID chatId,
-            @RequestParam String type,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        log.info("Creating {} conference for chat {} by {}", type, chatId, userDetails.getUsername());
-        
-        VideoConference conference = conferenceService.createConference(
-                chatId, 
-                userDetails.getUsername(),
-                VideoConference.ConferenceType.valueOf(type.toUpperCase())
-        );
-        
-        ConferenceDTO dto = mapToDTO(conference);
-        
-        IncomingCallDTO callNotification = new IncomingCallDTO(
-                conference.getId().toString(),
-                conference.getRoomId(),
-                userDetails.getUsername(),
-                conference.getConferenceType().name(),
-                "INCOMING"
-        );
-        
-        messagingTemplate.convertAndSend(
-                "/topic/chat/" + chatId + "/call",
-                callNotification
-        );
-        
-        log.info("Call notification sent to chat topic {}", chatId);
-        
-        return ResponseEntity.ok(dto);
-    }
+        @PostMapping("/chats/{chatId}")
+        public ResponseEntity<ConferenceDTO> createConference(
+                        @PathVariable UUID chatId,
+                        @RequestParam String type,
+                        @AuthenticationPrincipal UserDetails userDetails) {
 
-    @lombok.Data
-    @lombok.AllArgsConstructor
-    public static class IncomingCallDTO {
-        private String conferenceId;
-        private String roomId;
-        private String callerUsername;
-        private String callType;
-        private String status;
-    }
+                log.info("Creating {} conference for chat {} by {}", type, chatId, userDetails.getUsername());
 
-    @GetMapping("/{conferenceId}")
-    public ResponseEntity<ConferenceDTO> getConference(
-            @PathVariable UUID conferenceId) {
-        
-        // TODO: implement get by id
-        return ResponseEntity.ok().build();
-    }
+                VideoConference conference = conferenceService.createConference(
+                                chatId,
+                                userDetails.getUsername(),
+                                VideoConference.ConferenceType.valueOf(type.toUpperCase()));
 
-    @GetMapping("/{conferenceId}/participants")
-    public ResponseEntity<List<ParticipantDTO>> getParticipants(
-            @PathVariable UUID conferenceId) {
-        
-        var participants = conferenceService.getConferenceParticipants(conferenceId);
-        
-        List<ParticipantDTO> dtoList = participants.stream()
-                .map(p -> ParticipantDTO.builder()
-                        .userId(p.getUser().getId().toString())
-                        .username(p.getUser().getUsername())
-                        .avatarUrl(p.getUser().getAvatarUrl())
-                        .isVideoEnabled(p.getIsVideoEnabled())
-                        .isAudioEnabled(p.getIsAudioEnabled())
-                        .isScreenSharing(p.getIsScreenSharing())
-                        .isHost(p.getIsHost())
-                        .joinedAt(p.getJoinedAt())
-                        .build())
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(dtoList);
-    }
+                ConferenceDTO dto = mapToDTO(conference);
 
-    @PostMapping("/{conferenceId}/end")
-    public ResponseEntity<Void> endConference(
-            @PathVariable UUID conferenceId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        log.info("Ending conference {} by {}", conferenceId, userDetails.getUsername());
-        conferenceService.endConference(conferenceId, userDetails.getUsername());
-        
-        // Send CONFERENCE_ENDED event to all participants
-        messagingTemplate.convertAndSend(
-                "/topic/conference/" + conferenceId,
-                new ConferenceEventDTO(
-                        "CONFERENCE_ENDED",
-                        null,
-                        userDetails.getUsername()
-                )
-        );
-        
-        // Clear all video buffers and sessions for this conference
-        videoStreamBuffer.clearConferenceBuffers(conferenceId.toString());
-        videoReconnectService.removeConferenceSessions(conferenceId.toString());
-        log.info("Cleared all video buffers and sessions for conference {}", conferenceId);
-        
-        return ResponseEntity.ok().build();
-    }
+                IncomingCallDTO callNotification = new IncomingCallDTO(
+                                conference.getId().toString(),
+                                conference.getRoomId(),
+                                userDetails.getUsername(),
+                                conference.getConferenceType().name(),
+                                "INCOMING");
 
-    @GetMapping("/chats/{chatId}/active")
-    public ResponseEntity<ConferenceDTO> getActiveConference(
-            @PathVariable UUID chatId) {
-        
-        // TODO: implement
-        return ResponseEntity.ok().build();
-    }
+                messagingTemplate.convertAndSend(
+                                "/topic/chat/" + chatId + "/call",
+                                callNotification);
 
-    @GetMapping("/missed")
-    public ResponseEntity<List<ConferenceDTO>> getMissedCalls(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        log.info("Getting missed calls for user {}", userDetails.getUsername());
-        var missedCalls = conferenceService.getMissedCalls(userDetails.getUsername());
-        
-        List<ConferenceDTO> dtoList = missedCalls.stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(dtoList);
-    }
+                log.info("Call notification sent to chat topic {}", chatId);
 
-    @GetMapping("/missed/count")
-    public ResponseEntity<Long> getMissedCallsCount(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        long count = conferenceService.getMissedCallsCount(userDetails.getUsername());
-        return ResponseEntity.ok(count);
-    }
+                return ResponseEntity.ok(dto);
+        }
 
-    private ConferenceDTO mapToDTO(VideoConference conference) {
-        return ConferenceDTO.builder()
-                .id(conference.getId())
-                .roomId(conference.getRoomId())
-                .chatId(conference.getChat().getId())
-                .initiatorId(conference.getInitiator().getId().toString())
-                .initiatorUsername(conference.getInitiator().getUsername())
-                .conferenceType(conference.getConferenceType().name())
-                .status(conference.getStatus().name())
-                .startedAt(conference.getStartedAt())
-                .isRecorded(conference.getIsRecorded())
-                .maxParticipants(conference.getMaxParticipants())
-                .build();
-    }
+        @lombok.Data
+        @lombok.AllArgsConstructor
+        public static class IncomingCallDTO {
+                private String conferenceId;
+                private String roomId;
+                private String callerUsername;
+                private String callType;
+                private String status;
+        }
 
-    @lombok.Data
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    @lombok.Builder
-    public static class ConferenceDTO {
-        private UUID id;
-        private String roomId;
-        private UUID chatId;
-        private String initiatorId;
-        private String initiatorUsername;
-        private String conferenceType;
-        private String status;
-        private java.time.LocalDateTime startedAt;
-        private Boolean isRecorded;
-        private Integer maxParticipants;
-    }
+        @GetMapping("/{conferenceId}")
+        public ResponseEntity<ConferenceDTO> getConference(
+                        @PathVariable UUID conferenceId) {
 
-    @lombok.Data
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    @lombok.Builder
-    public static class ParticipantDTO {
-        private String userId;
-        private String username;
-        private String avatarUrl;
-        private Boolean isVideoEnabled;
-        private Boolean isAudioEnabled;
-        private Boolean isScreenSharing;
-        private Boolean isHost;
-        private java.time.LocalDateTime joinedAt;
-    }
+                // TODO: implement get by id
+                return ResponseEntity.ok().build();
+        }
+
+        @GetMapping("/{conferenceId}/participants")
+        public ResponseEntity<List<ParticipantDTO>> getParticipants(
+                        @PathVariable UUID conferenceId) {
+
+                var participants = conferenceService.getConferenceParticipants(conferenceId);
+
+                List<ParticipantDTO> dtoList = participants.stream()
+                                .map(p -> ParticipantDTO.builder()
+                                                .userId(p.getUser().getId().toString())
+                                                .username(p.getUser().getUsername())
+                                                .avatarUrl(p.getUser().getAvatarUrl())
+                                                .isVideoEnabled(p.getIsVideoEnabled())
+                                                .isAudioEnabled(p.getIsAudioEnabled())
+                                                .isScreenSharing(p.getIsScreenSharing())
+                                                .isHost(p.getIsHost())
+                                                .joinedAt(p.getJoinedAt())
+                                                .build())
+                                .collect(Collectors.toList());
+
+                return ResponseEntity.ok(dtoList);
+        }
+
+        @PostMapping("/{conferenceId}/join")
+        public ResponseEntity<ParticipantDTO> joinConference(
+                        @PathVariable UUID conferenceId,
+                        @AuthenticationPrincipal UserDetails userDetails) {
+
+                log.info("User {} joining conference {}", userDetails.getUsername(), conferenceId);
+
+                var participant = conferenceService.joinConference(
+                                conferenceId,
+                                userDetails.getUsername(),
+                                true,
+                                true);
+
+                ParticipantDTO dto = ParticipantDTO.builder()
+                                .userId(participant.getUser().getId().toString())
+                                .username(participant.getUser().getUsername())
+                                .avatarUrl(participant.getUser().getAvatarUrl())
+                                .isVideoEnabled(participant.getIsVideoEnabled())
+                                .isAudioEnabled(participant.getIsAudioEnabled())
+                                .isScreenSharing(participant.getIsScreenSharing())
+                                .isHost(participant.getIsHost())
+                                .joinedAt(participant.getJoinedAt())
+                                .build();
+
+                return ResponseEntity.ok(dto);
+        }
+
+        @PostMapping("/{conferenceId}/leave")
+        public ResponseEntity<Void> leaveConference(
+                        @PathVariable UUID conferenceId,
+                        @AuthenticationPrincipal UserDetails userDetails) {
+
+                log.info("User {} leaving conference {}", userDetails.getUsername(), conferenceId);
+                conferenceService.leaveConference(conferenceId, userDetails.getUsername());
+                return ResponseEntity.ok().build();
+        }
+
+        @PostMapping("/{conferenceId}/end")
+        public ResponseEntity<Void> endConference(
+                        @PathVariable UUID conferenceId,
+                        @AuthenticationPrincipal UserDetails userDetails) {
+
+                log.info("Ending conference {} by {}", conferenceId, userDetails.getUsername());
+                conferenceService.endConference(conferenceId, userDetails.getUsername());
+
+                // Send CONFERENCE_ENDED event to all participants
+                messagingTemplate.convertAndSend(
+                                "/topic/conference/" + conferenceId,
+                                new ConferenceEventDTO(
+                                                "CONFERENCE_ENDED",
+                                                null,
+                                                userDetails.getUsername()));
+
+                // Clear all video buffers and sessions for this conference
+                videoStreamBuffer.clearConferenceBuffers(conferenceId.toString());
+                videoReconnectService.removeConferenceSessions(conferenceId.toString());
+                log.info("Cleared all video buffers and sessions for conference {}", conferenceId);
+
+                return ResponseEntity.ok().build();
+        }
+
+        @GetMapping("/chats/{chatId}/active")
+        public ResponseEntity<ConferenceDTO> getActiveConference(
+                        @PathVariable UUID chatId) {
+
+                // TODO: implement
+                return ResponseEntity.ok().build();
+        }
+
+        @GetMapping("/missed")
+        public ResponseEntity<List<ConferenceDTO>> getMissedCalls(
+                        @AuthenticationPrincipal UserDetails userDetails) {
+
+                log.info("Getting missed calls for user {}", userDetails.getUsername());
+                var missedCalls = conferenceService.getMissedCalls(userDetails.getUsername());
+
+                List<ConferenceDTO> dtoList = missedCalls.stream()
+                                .map(this::mapToDTO)
+                                .collect(Collectors.toList());
+
+                return ResponseEntity.ok(dtoList);
+        }
+
+        @GetMapping("/missed/count")
+        public ResponseEntity<Long> getMissedCallsCount(
+                        @AuthenticationPrincipal UserDetails userDetails) {
+
+                long count = conferenceService.getMissedCallsCount(userDetails.getUsername());
+                return ResponseEntity.ok(count);
+        }
+
+        private ConferenceDTO mapToDTO(VideoConference conference) {
+                return ConferenceDTO.builder()
+                                .id(conference.getId())
+                                .roomId(conference.getRoomId())
+                                .chatId(conference.getChat().getId())
+                                .initiatorId(conference.getInitiator().getId().toString())
+                                .initiatorUsername(conference.getInitiator().getUsername())
+                                .conferenceType(conference.getConferenceType().name())
+                                .status(conference.getStatus().name())
+                                .startedAt(conference.getStartedAt())
+                                .isRecorded(conference.getIsRecorded())
+                                .maxParticipants(conference.getMaxParticipants())
+                                .build();
+        }
+
+        @lombok.Data
+        @lombok.NoArgsConstructor
+        @lombok.AllArgsConstructor
+        @lombok.Builder
+        public static class ConferenceDTO {
+                private UUID id;
+                private String roomId;
+                private UUID chatId;
+                private String initiatorId;
+                private String initiatorUsername;
+                private String conferenceType;
+                private String status;
+                private java.time.LocalDateTime startedAt;
+                private Boolean isRecorded;
+                private Integer maxParticipants;
+        }
+
+        @lombok.Data
+        @lombok.NoArgsConstructor
+        @lombok.AllArgsConstructor
+        @lombok.Builder
+        public static class ParticipantDTO {
+                private String userId;
+                private String username;
+                private String avatarUrl;
+                private Boolean isVideoEnabled;
+                private Boolean isAudioEnabled;
+                private Boolean isScreenSharing;
+                private Boolean isHost;
+                private java.time.LocalDateTime joinedAt;
+        }
 }

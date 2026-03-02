@@ -50,9 +50,6 @@ public class NetworkAutoConfiguration {
     private String vpnIp;
     private String hostname;
 
-    // Simple, safe logger fallback (in case Lombok is not active in this environment)
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(NetworkAutoConfiguration.class);
-
     @PostConstruct
     public void init() {
         detectNetworkConfiguration();
@@ -110,7 +107,8 @@ public class NetworkAutoConfiguration {
                 NetworkInterface ni = NetworkInterface.getByName(preferredInterface);
                 if (ni != null) {
                     String ip = extractIpFromInterface(ni);
-                    if (ip != null) return ip;
+                    if (ip != null)
+                        return ip;
                 }
             }
 
@@ -119,9 +117,11 @@ public class NetworkAutoConfiguration {
             while (interfaces.hasMoreElements()) {
                 NetworkInterface ni = interfaces.nextElement();
                 // Пропускаем loopback и выключенные интерфейсы
-                if (ni.isLoopback() || !ni.isUp()) continue;
+                if (ni.isLoopback() || !ni.isUp())
+                    continue;
                 String ip = extractIpFromInterface(ni);
-                if (ip != null) return ip;
+                if (ip != null)
+                    return ip;
             }
 
             // Fallback
@@ -136,8 +136,10 @@ public class NetworkAutoConfiguration {
         Enumeration<InetAddress> addresses = ni.getInetAddresses();
         while (addresses.hasMoreElements()) {
             InetAddress addr = addresses.nextElement();
-            if (!useIpv6 && addr instanceof java.net.Inet6Address) continue;
-            if (addr.isLoopbackAddress()) continue;
+            if (!useIpv6 && addr instanceof java.net.Inet6Address)
+                continue;
+            if (addr.isLoopbackAddress())
+                continue;
             String ip = addr.getHostAddress();
             if (ip != null && !ip.isEmpty()) {
                 return ip;
@@ -153,9 +155,12 @@ public class NetworkAutoConfiguration {
                 NetworkInterface ni = interfaces.nextElement();
                 String name = ni.getName().toLowerCase();
                 String displayName = ni.getDisplayName().toLowerCase();
-                boolean isVpnInterface = name.contains("tun") || name.contains("tap") || name.contains("wg") || name.contains("vpn")
-                        || displayName.contains("vpn") || displayName.contains("wireguard") || displayName.contains("openvpn");
-                if (!isVpnInterface || !ni.isUp()) continue;
+                boolean isVpnInterface = name.contains("tun") || name.contains("tap") || name.contains("wg")
+                        || name.contains("vpn")
+                        || displayName.contains("vpn") || displayName.contains("wireguard")
+                        || displayName.contains("openvpn");
+                if (!isVpnInterface || !ni.isUp())
+                    continue;
                 Enumeration<InetAddress> addresses = ni.getInetAddresses();
                 while (addresses.hasMoreElements()) {
                     InetAddress addr = addresses.nextElement();
@@ -171,26 +176,30 @@ public class NetworkAutoConfiguration {
         }
     }
 
-    private String detectPrivateIp() { return null; }
+    private String detectPrivateIp() {
+        return null;
+    }
 
-    private String detectPublicIp() { return null; }
-    
+    private String detectPublicIp() {
+        return null;
+    }
+
     public String generateTurnUrl() {
         return "turn:" + (publicIp != null ? publicIp : localIp) + ":3478";
     }
-    
+
     public String generateTurnsUrl() {
         return "turns:" + (publicIp != null ? publicIp : localIp) + ":5349";
     }
-    
+
     public String getBestTurnIp() {
         return publicIp != null ? publicIp : localIp;
     }
-    
+
     public String getBestClientIp() {
         return publicIp != null ? publicIp : localIp;
     }
-    
+
     public String getBestIp() {
         return publicIp != null ? publicIp : localIp;
     }
