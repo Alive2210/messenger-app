@@ -25,7 +25,7 @@ public class EncryptionService {
     private static final int GCM_IV_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;
     private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
-    private static final int RSA_KEY_SIZE = 2048;
+    private static final int RSA_KEY_SIZE = 3072;
 
     /**
      * Generate AES-256 key for message encryption

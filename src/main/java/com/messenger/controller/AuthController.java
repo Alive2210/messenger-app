@@ -5,8 +5,11 @@ import com.messenger.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.messenger.exception.GlobalExceptionHandler.ErrorResponse;
 
 @Slf4j
 @RestController
@@ -24,10 +27,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @RateLimiter(name = "login", fallbackMethod = "loginFallback")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
         log.info("Login attempt for user: {}", request.getUsername());
         AuthResponseDTO response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<ErrorResponse> loginFallback(LoginRequestDTO request, Throwable ex) {
+        log.warn("Rate limit exceeded for user: {}. Error: {}", request.getUsername(), ex.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                "Too Many Requests",
+                "Please try again later",
+                "/api/auth/login");
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(error);
     }
 
     @PostMapping("/refresh")

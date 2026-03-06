@@ -73,11 +73,13 @@ public class WebSocketController {
      */
     @MessageMapping("/chat.typing")
     public void typingIndicator(@Payload TypingRequest request, Principal principal) {
-        TypingEventDTO event = new TypingEventDTO(
-                principal.getName(),
-                request.getChatId(),
-                request.isTyping()
-        );
+        TypingEventDTO event = TypingEventDTO.builder()
+                .chatId(request.getChatId().toString())
+                .userId(principal.getName())
+                .username(principal.getName())
+                .isTyping(request.isTyping())
+                .timestamp(java.time.Instant.now())
+                .build();
 
         messagingTemplate.convertAndSend(
                 "/topic/chat/" + request.getChatId() + "/typing",
@@ -98,7 +100,12 @@ public class WebSocketController {
         // Notify other participants
         messagingTemplate.convertAndSend(
                 "/topic/chat/" + request.getChatId() + "/read",
-                new ReadReceiptDTO(principal.getName(), request.getLastReadMessageId())
+                ReadReceiptDTO.builder()
+                        .userId(principal.getName())
+                        .messageId(request.getLastReadMessageId().toString())
+                        .status(ReadReceiptDTO.ReceiptStatus.READ)
+                        .timestamp(java.time.Instant.now())
+                        .build()
         );
     }
 
@@ -401,128 +408,6 @@ public class WebSocketController {
     }
 
     // Location sharing via WebSocket was removed from this version to keep stability
-
-    /**
-     * Handle reaction add via WebSocket
-     */
-    @MessageMapping("/reaction.add")
-    public void addReaction(@Payload ReactionDTOs.AddReactionRequest request, Principal principal) {
-        try {
-            String username = principal.getName();
-            log.info("WebSocket: User {} adding reaction {} to message {}",
-                    username, request.getEmojiCode(), request.getMessageId());
-
-            ReactionDTOs.ReactionDTO reaction = reactionService.addReaction(request, username);
-            
-            // Get updated summary
-            ReactionDTOs.MessageReactionsDTO summary = reactionService
-                    .getMessageReactionsSummary(request.getMessageId(), username);
-
-            // Create event
-            ReactionDTOs.ReactionEventDTO event = ReactionDTOs.ReactionEventDTO.builder()
-                    .eventType("REACTION_ADDED")
-                    .reaction(reaction)
-                    .summary(summary)
-                    .chatId(request.getMessageId().toString())
-                    .build();
-
-            // Broadcast to all participants in the chat
-            messagingTemplate.convertAndSend(
-                    "/topic/message/" + request.getMessageId() + "/reactions",
-                    event
-            );
-
-        } catch (Exception e) {
-            log.error("Error adding reaction via WebSocket", e);
-            messagingTemplate.convertAndSendToUser(
-                    principal.getName(),
-                    "/queue/errors",
-                    new ErrorDTO("Failed to add reaction: " + e.getMessage())
-            );
-        }
-    }
-
-    /**
-     * Handle reaction remove via WebSocket
-     */
-    @MessageMapping("/reaction.remove")
-    public void removeReaction(@Payload ReactionDTOs.RemoveReactionRequest request, Principal principal) {
-        try {
-            String username = principal.getName();
-            log.info("WebSocket: User {} removing reaction {} from message {}",
-                    username, request.getEmojiCode(), request.getMessageId());
-
-            reactionService.removeReaction(request, username);
-            
-            // Get updated summary
-            ReactionDTOs.MessageReactionsDTO summary = reactionService
-                    .getMessageReactionsSummary(request.getMessageId(), username);
-
-            // Create event
-            ReactionDTOs.ReactionEventDTO event = ReactionDTOs.ReactionEventDTO.builder()
-                    .eventType("REACTION_REMOVED")
-                    .reaction(null)
-                    .summary(summary)
-                    .chatId(request.getMessageId().toString())
-                    .build();
-
-            // Broadcast to all participants
-            messagingTemplate.convertAndSend(
-                    "/topic/message/" + request.getMessageId() + "/reactions",
-                    event
-            );
-
-        } catch (Exception e) {
-            log.error("Error removing reaction via WebSocket", e);
-            messagingTemplate.convertAndSendToUser(
-                    principal.getName(),
-                    "/queue/errors",
-                    new ErrorDTO("Failed to remove reaction: " + e.getMessage())
-            );
-        }
-    }
-
-    /**
-     * Handle reaction toggle via WebSocket
-     */
-    @MessageMapping("/reaction.toggle")
-    public void toggleReaction(@Payload ReactionDTOs.AddReactionRequest request, Principal principal) {
-        try {
-            String username = principal.getName();
-            log.info("WebSocket: User {} toggling reaction {} on message {}",
-                    username, request.getEmojiCode(), request.getMessageId());
-
-            reactionService.toggleReaction(request, username);
-            
-            // Get updated summary
-            ReactionDTOs.MessageReactionsDTO summary = reactionService
-                    .getMessageReactionsSummary(request.getMessageId(), username);
-
-            // Determine event type
-            String eventType = summary.isUserHasReacted() ? "REACTION_ADDED" : "REACTION_REMOVED";
-
-            // Create event
-            ReactionDTOs.ReactionEventDTO event = ReactionDTOs.ReactionEventDTO.builder()
-                    .eventType(eventType)
-                    .summary(summary)
-                    .chatId(request.getMessageId().toString())
-                    .build();
-
-            // Broadcast to all participants
-            messagingTemplate.convertAndSend(
-                    "/topic/message/" + request.getMessageId() + "/reactions",
-                    event
-            );
-
-        } catch (Exception e) {
-            log.error("Error toggling reaction via WebSocket", e);
-            messagingTemplate.convertAndSendToUser(
-                    principal.getName(),
-                    "/queue/errors",
-                    new ErrorDTO("Failed to toggle reaction: " + e.getMessage())
-            );
-        }
-    }
 
     /**
      * Handle incoming video frame for buffering

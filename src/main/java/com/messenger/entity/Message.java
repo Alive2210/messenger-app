@@ -57,9 +57,6 @@ public class Message {
     @OneToOne(mappedBy = "message", cascade = CascadeType.ALL)
     private FileAttachment fileAttachment;
 
-    @OneToOne(mappedBy = "message", cascade = CascadeType.ALL)
-    private VoiceMessage voiceMessage;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_to_message_id")
     private Message replyToMessage;

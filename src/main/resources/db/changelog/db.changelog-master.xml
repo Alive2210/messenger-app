@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <changeSet id="1" author="messenger">
@@ -67,7 +65,7 @@
             <column name="last_read_message_id" type="UUID"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
-        
+
         <addUniqueConstraint tableName="user_chats" columnNames="user_id, chat_id" constraintName="uk_user_chat"/>
     </changeSet>
 
@@ -96,12 +94,12 @@
             <column name="updated_at" type="TIMESTAMP"/>
             <column name="version" type="BIGINT"/>
         </createTable>
-        
+
         <createIndex tableName="messages" indexName="idx_messages_chat_created">
             <column name="chat_id"/>
             <column name="created_at"/>
         </createIndex>
-        
+
         <createIndex tableName="messages" indexName="idx_messages_sender">
             <column name="sender_id"/>
         </createIndex>
@@ -129,7 +127,7 @@
             <column name="is_encrypted" type="BOOLEAN" defaultValue="true"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
-        
+
         <addUniqueConstraint tableName="file_attachments" columnNames="message_id" constraintName="uk_file_message"/>
     </changeSet>
 
@@ -152,7 +150,7 @@
             <column name="is_encrypted" type="BOOLEAN" defaultValue="true"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
-        
+
         <addUniqueConstraint tableName="voice_messages" columnNames="message_id" constraintName="uk_voice_message"/>
     </changeSet>
 
@@ -173,9 +171,9 @@
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
-        
+
         <addUniqueConstraint tableName="message_status" columnNames="message_id, user_id" constraintName="uk_message_user_status"/>
-        
+
         <createIndex tableName="message_status" indexName="idx_status_user">
             <column name="user_id"/>
         </createIndex>
@@ -210,7 +208,7 @@
             <column name="updated_at" type="TIMESTAMP"/>
             <column name="version" type="BIGINT"/>
         </createTable>
-        
+
         <createIndex tableName="video_conferences" indexName="idx_conference_chat">
             <column name="chat_id"/>
         </createIndex>
@@ -235,7 +233,7 @@
             <column name="is_host" type="BOOLEAN" defaultValue="false"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
-        
+
         <createIndex tableName="conference_participants" indexName="idx_participant_conference">
             <column name="conference_id"/>
         </createIndex>
@@ -266,18 +264,65 @@
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
-        
+
         <createIndex tableName="devices" indexName="idx_devices_user">
             <column name="user_id"/>
         </createIndex>
-        
+
         <createIndex tableName="devices" indexName="idx_devices_online">
             <column name="is_online"/>
         </createIndex>
-        
+
         <createIndex tableName="devices" indexName="idx_devices_heartbeat">
             <column name="last_heartbeat"/>
         </createIndex>
+    </changeSet>
+
+    <changeSet id="add-indexes" author="developer">
+        <createIndex indexName="idx_users_username" tableName="users">
+            <column name="username"/>
+        </createIndex>
+        <createIndex indexName="idx_users_email" tableName="users">
+            <column name="email"/>
+        </createIndex>
+        <createIndex indexName="idx_devices_user_id" tableName="devices">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="idx_devices_device_id" tableName="devices">
+            <column name="device_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="message-mentions" author="developer">
+        <createTable tableName="message_mentions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="message_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_mention_message" referencedTableName="messages" referencedColumnNames="id"/>
+            </column>
+            <column name="mentioned_user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_mention_mentioned" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="mentioner_user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_mention_mentioner" referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+            <column name="is_read" type="BOOLEAN" defaultValue="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="message_mentions" indexName="idx_mentions_user">
+            <column name="mentioned_user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="fix-voice-message-id-type" author="developer">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="voice_messages" columnName="id"/>
+        </preConditions>
+        <sql dbms="postgresql">
+            ALTER TABLE voice_messages ALTER COLUMN id TYPE uuid USING id::uuid;
+        </sql>
     </changeSet>
 
 </databaseChangeLog>

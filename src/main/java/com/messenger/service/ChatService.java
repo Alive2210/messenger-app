@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ public class ChatService {
         private final UserChatRepository userChatRepository;
         private final MessageRepository messageRepository;
         private final MessageStatusRepository messageStatusRepository;
+        private final VoiceMessageRepository voiceMessageRepository;
 
         @Transactional
         @CacheEvict(value = "userChats", key = "#creatorUsername")
@@ -316,15 +318,18 @@ public class ChatService {
                 }
 
                 VoiceMessageDTO voiceMessageDTO = null;
-                if (message.getVoiceMessage() != null) {
-                        VoiceMessage vm = message.getVoiceMessage();
-                        voiceMessageDTO = VoiceMessageDTO.builder()
-                                        .audioUrl(vm.getAudioUrl())
-                                        .durationSeconds(vm.getDurationSeconds())
-                                        .fileSize(vm.getFileSize())
-                                        .mimeType(vm.getMimeType())
-                                        .waveformData(vm.getWaveformData())
-                                        .build();
+                if (message.getMessageType() == Message.MessageType.VOICE) {
+                        Optional<VoiceMessage> voiceOpt = voiceMessageRepository.findByMessageId(message.getId());
+                        if (voiceOpt.isPresent()) {
+                                VoiceMessage vm = voiceOpt.get();
+                                voiceMessageDTO = VoiceMessageDTO.builder()
+                                                .audioUrl(vm.getAudioUrl())
+                                                .duration(vm.getDuration())
+                                                .fileSize(vm.getFileSize())
+                                                .mimeType(vm.getMimeType())
+                                                .waveform(vm.getWaveform())
+                                                .build();
+                        }
                 }
 
                 return MessageDTO.builder()

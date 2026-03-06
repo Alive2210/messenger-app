@@ -41,10 +41,11 @@ echo -e "${GREEN}[INFO] Starting Messenger Server...${NC}"
 echo ""
 
 # Start services
+COMPOSE_FILE=${COMPOSE_FILE:-docker-compose.yml}
 if command -v docker-compose &> /dev/null; then
-    docker-compose up -d
+    docker-compose -f $COMPOSE_FILE up -d
 else
-    docker compose up -d
+    docker compose -f $COMPOSE_FILE up -d
 fi
 
 if [ $? -ne 0 ]; then

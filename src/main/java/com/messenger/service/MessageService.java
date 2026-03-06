@@ -33,6 +33,7 @@ public class MessageService {
     private final UserRepository userRepository;
     private final UserChatRepository userChatRepository;
     private final MessageStatusRepository messageStatusRepository;
+    private final VoiceMessageRepository voiceMessageRepository;
     private final RabbitTemplate rabbitTemplate;
     private final SimpMessagingTemplate messagingTemplate;
     private final FileStorageService fileStorageService;
@@ -85,6 +86,9 @@ public class MessageService {
             message.setReplyToMessage(replyTo);
         }
 
+        // Save message first to get its ID
+        message = messageRepository.save(message);
+
         // Handle file attachment
         if (request.getFileAttachment() != null && messageType == Message.MessageType.FILE) {
             FileAttachmentDTO fileDto = request.getFileAttachment();
@@ -97,23 +101,24 @@ public class MessageService {
                     .isEncrypted(true)
                     .build();
             message.setFileAttachment(attachment);
+            messageRepository.save(message); // Save again with attachment
         }
 
         // Handle voice message
         if (request.getVoiceMessage() != null && messageType == Message.MessageType.VOICE) {
             VoiceMessageDTO voiceDto = request.getVoiceMessage();
             VoiceMessage voice = VoiceMessage.builder()
-                    .message(message)
+                    .messageId(message.getId()) // Use the generated UUID
+                    .chatId(chat.getId())
+                    .senderId(sender.getId())
                     .audioUrl(voiceDto.getAudioUrl())
-                    .durationSeconds(voiceDto.getDurationSeconds())
+                    .duration(voiceDto.getDuration())
                     .fileSize(voiceDto.getFileSize())
-                    .waveformData(voiceDto.getWaveformData())
-                    .isEncrypted(true)
+                    .waveform(voiceDto.getWaveform())
+                    .mimeType(voiceDto.getMimeType())
                     .build();
-            message.setVoiceMessage(voice);
+            voiceMessageRepository.save(voice);
         }
-
-        message = messageRepository.save(message);
 
         // Create message statuses for all chat members
         List<UserChat> members = userChatRepository.findByChatId(chat.getId());
@@ -220,15 +225,18 @@ public class MessageService {
                     .build());
         }
 
-        if (message.getVoiceMessage() != null) {
-            VoiceMessage voice = message.getVoiceMessage();
-            builder.voiceMessage(VoiceMessageDTO.builder()
-                    .audioUrl(fileStorageService.getFileUrl(voice.getAudioUrl()))
-                    .durationSeconds(voice.getDurationSeconds())
-                    .fileSize(voice.getFileSize())
-                    .mimeType(voice.getMimeType())
-                    .waveformData(voice.getWaveformData())
-                    .build());
+        if (message.getMessageType() == Message.MessageType.VOICE) {
+            Optional<VoiceMessage> voiceOpt = voiceMessageRepository.findByMessageId(message.getId());
+            if (voiceOpt.isPresent()) {
+                VoiceMessage voice = voiceOpt.get();
+                builder.voiceMessage(VoiceMessageDTO.builder()
+                        .audioUrl(fileStorageService.getFileUrl(voice.getAudioUrl()))
+                        .duration(voice.getDuration())
+                        .fileSize(voice.getFileSize())
+                        .mimeType(voice.getMimeType())
+                        .waveform(voice.getWaveform())
+                        .build());
+            }
         }
 
         return builder.build();

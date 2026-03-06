@@ -1,7 +1,14 @@
 server:
   port: 8080
+  address: 0.0.0.0
   error:
     include-message: always
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: none
 
 spring:
   jackson:
@@ -55,9 +62,9 @@ spring:
       max-file-size: 1024MB
       max-request-size: 1024MB
 
-# JWT Configuration
+# JWT Configuration - NO DEFAULT VALUE!
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-here-must-be-at-least-32-characters}
+  secret: ${JWT_SECRET}
   expiration: 86400000 # 24 hours in milliseconds
   refresh-expiration: 604800000 # 7 days
 
@@ -121,14 +128,26 @@ management:
     health:
       show-details: when-authorized
 
-# VAPID keys for push notifications (placeholder values)
+# VAPID keys for push notifications - MUST BE SET IN ENVIRONMENT
 vapid:
-  public-key: BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U
-  private-key: UUxI4O8-FbRouAf7-7OT9lYq3Z9t3kU5jK8nV7wX2yA
-  subject: mailto:admin@example.com
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT:mailto:admin@example.com}
+
 # SFU (Mediasoup) Configuration  
 sfu:  
   base-url: http://localhost:3000  
   timeout: 5000  
   max-rooms-per-node: 10  
   heartbeat-interval: 10000 
+
+# Rate Limiter Configuration
+resilience4j:
+  ratelimiter:
+    instances:
+      login:
+        limit-for-period: 1000
+        limit-refresh-period: 1s
+        timeout-duration: 0
+        register-health-indicator: true
+        event-consumer-buffer-size: 100

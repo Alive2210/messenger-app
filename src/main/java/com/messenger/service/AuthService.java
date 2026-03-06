@@ -42,11 +42,11 @@ public class AuthService {
         // Check if username or email already exists
         if (userRepository.existsByUsername(request.getUsername())) {
             MessengerLogger.securityAuthFailure(request.getUsername(), "USERNAME_EXISTS", "unknown");
-            throw new RuntimeException("Username already taken");
+            throw new IllegalArgumentException("Username already taken");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             MessengerLogger.securityAuthFailure(request.getEmail(), "EMAIL_EXISTS", "unknown");
-            throw new RuntimeException("Email already registered");
+            throw new IllegalArgumentException("Email already registered");
         }
 
         // Generate RSA key pair for E2E encryption if not provided
@@ -56,10 +56,9 @@ public class AuthService {
         if (publicKey == null || publicKey.isEmpty()) {
             KeyPair keyPair = encryptionService.generateRSAKeyPair();
             publicKey = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
-            // Encrypt private key with user's password for secure storage
+            // FIX: Encrypt private key with user's password (password known only to client)
             String privateKey = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
-            encryptedPrivateKey = encryptionService.encryptMessage(privateKey,
-                    encryptionService.generateAESKey());
+            encryptedPrivateKey = encryptionService.encryptMessage(privateKey, request.getPassword());
         }
 
         // Create user
@@ -111,7 +110,7 @@ public class AuthService {
             String refreshToken = jwtTokenProvider.generateRefreshToken(username);
 
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
             // Update online status
             user.setIsOnline(true);
@@ -133,7 +132,7 @@ public class AuthService {
                     .build();
 
         } catch (BadCredentialsException e) {
-            throw new RuntimeException("Invalid username or password");
+            throw new IllegalArgumentException("Invalid credentials");
         }
     }
 
@@ -172,12 +171,12 @@ public class AuthService {
 
     public AuthResponseDTO refreshToken(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new IllegalArgumentException("Invalid refresh token");
         }
 
         String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String newAccessToken = jwtTokenProvider.generateToken(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
@@ -194,19 +193,29 @@ public class AuthService {
     }
 
     public void logout(String token) {
-        if (token != null && !token.isEmpty()) {
+        if (token == null || token.isEmpty()) {
+            log.warn("Logout called with null or empty token");
+            return;
+        }
+        try {
+            if (!jwtTokenProvider.validateToken(token)) {
+                log.warn("Logout called with invalid token");
+                return;
+            }
             String username = jwtTokenProvider.getUsernameFromToken(token);
             userRepository.findByUsername(username).ifPresent(user -> {
                 user.setIsOnline(false);
                 userRepository.save(user);
                 log.info("User logged out: {}", username);
             });
+        } catch (Exception e) {
+            log.error("Error during logout: {}", e.getMessage());
         }
     }
 
     public PublicKeyDTO getPublicKey(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         return PublicKeyDTO.builder()
                 .username(user.getUsername())

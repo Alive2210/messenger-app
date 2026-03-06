@@ -38,7 +38,7 @@ public class ReactionService {
         // Проверяем, существует ли уже такая реакция
         Optional<MessageReaction> existingReaction = reactionRepository
                 .findByMessageIdAndUserIdAndEmojiCode(
-                        request.getMessageId(), user.getId(), request.getEmojiCode());
+                        request.getMessageId().toString(), user.getId().toString(), request.getEmojiCode());
 
         if (existingReaction.isPresent()) {
             log.info("User {} already reacted with {} to message {}",
@@ -50,12 +50,10 @@ public class ReactionService {
         Optional<Emoji> emoji = emojiRepository.findByEmojiCode(request.getEmojiCode());
 
         MessageReaction reaction = MessageReaction.builder()
-                .message(message)
-                .user(user)
+                .messageId(request.getMessageId().toString())
+                .userId(user.getId().toString())
                 .emojiCode(request.getEmojiCode())
-                .emojiShortcode(request.getEmojiShortcode())
-                .isAnimated(emoji.map(Emoji::getIsAnimated).orElse(false))
-                .animatedUrl(emoji.map(Emoji::getAnimatedUrl).orElse(null))
+                .timestamp(java.time.Instant.now())
                 .build();
 
         reactionRepository.save(reaction);
@@ -72,7 +70,7 @@ public class ReactionService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         reactionRepository.deleteByMessageIdAndUserIdAndEmojiCode(
-                request.getMessageId(), user.getId(), request.getEmojiCode());
+                request.getMessageId().toString(), user.getId().toString(), request.getEmojiCode());
 
         log.info("User {} removed reaction {} from message {}",
                 username, request.getEmojiCode(), request.getMessageId());
@@ -80,7 +78,7 @@ public class ReactionService {
 
     @Transactional(readOnly = true)
     public List<ReactionDTO> getReactionsForMessage(UUID messageId) {
-        return reactionRepository.findByMessageIdOrderByCreatedAt(messageId)
+        return reactionRepository.findByMessageId(messageId.toString())
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -88,7 +86,7 @@ public class ReactionService {
 
     @Transactional(readOnly = true)
     public MessageReactionsDTO getMessageReactionsSummary(UUID messageId, String username) {
-        List<MessageReaction> reactions = reactionRepository.findByMessageId(messageId);
+        List<MessageReaction> reactions = reactionRepository.findByMessageId(messageId.toString());
 
         User user = userRepository.findByUsername(username).orElse(null);
 
@@ -113,7 +111,7 @@ public class ReactionService {
 
         if (user != null) {
             for (MessageReaction reaction : reactions) {
-                if (reaction.getUser().getId().equals(user.getId())) {
+                if (reaction.getUserId().equals(user.getId().toString())) {
                     userHasReacted = true;
                     userReaction = reaction.getEmojiCode();
                     break;
@@ -136,7 +134,7 @@ public class ReactionService {
 
         Optional<MessageReaction> existing = reactionRepository
                 .findByMessageIdAndUserIdAndEmojiCode(
-                        request.getMessageId(), user.getId(), request.getEmojiCode());
+                        request.getMessageId().toString(), user.getId().toString(), request.getEmojiCode());
 
         if (existing.isPresent()) {
             removeReaction(RemoveReactionRequest.builder()
@@ -150,15 +148,12 @@ public class ReactionService {
 
     private ReactionDTO mapToDTO(MessageReaction reaction) {
         return ReactionDTO.builder()
-                .id(reaction.getId())
-                .messageId(reaction.getMessage().getId())
-                .userId(reaction.getUser().getId().toString())
-                .username(reaction.getUser().getUsername())
+                .id(null)  // Long id cannot be converted to UUID
+                .messageId(UUID.fromString(reaction.getMessageId()))
+                .userId(reaction.getUserId())
                 .emojiCode(reaction.getEmojiCode())
-                .emojiShortcode(reaction.getEmojiShortcode())
-                .isAnimated(reaction.getIsAnimated())
-                .animatedUrl(reaction.getAnimatedUrl())
-                .createdAt(reaction.getCreatedAt())
+                .createdAt(reaction.getTimestamp() != null ? 
+                    java.time.LocalDateTime.ofInstant(reaction.getTimestamp(), java.time.ZoneOffset.UTC) : null)
                 .build();
     }
 }

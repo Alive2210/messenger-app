@@ -66,12 +66,40 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow all origins for mobile device access (iPhone, Android, etc.)
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept",
-                "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Length", "Content-Type"));
+        // Allow ALL origins — app is accessible from any IP (localhost, LAN, VPN,
+        // external)
+        // Security is handled by JWT tokens, not CORS origin restrictions
+        configuration.setAllowedOriginPatterns(Arrays.asList("*", "https://localhost", "https://127.0.0.1"));
+
+        // iOS Safari friendly methods
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+
+        // iOS Safari needs these headers explicitly allowed
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "X-CSRF-Token",
+                "X-Client-Info",
+                "X-Client-Version",
+                "Device-ID",
+                "Device-Name",
+                "Device-Model",
+                "OS-Version",
+                "App-Version"));
+
+        // Exposed headers for iOS Safari
+        configuration.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Length",
+                "Content-Type",
+                "X-Requested-With",
+                "X-Total-Count",
+                "X-Page-Number"));
+
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

@@ -9,8 +9,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/${NGINX_CONFIG:-nginx.ssl.conf}:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./messenger-client/dist:/usr/share/nginx/html:ro
       - ./logs/nginx:/var/log/nginx
     depends_on:
       - app
@@ -35,12 +36,12 @@ services:
     networks:
       - messenger-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-messenger_user} -d ${DB_NAME:-messenger_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-messenger_user} -d ${DB_NAME:-messenger_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    command: 
+    command:
       - "postgres"
       - "-c"
       - "max_connections=200"
@@ -85,7 +86,7 @@ services:
     networks:
       - messenger-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -103,7 +104,7 @@ services:
     networks:
       - messenger-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 5

@@ -9,6 +9,7 @@ WORKDIR /build
 # Copy Maven files first for better caching
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
+COPY lombok.config ./
 
 # Download dependencies
 RUN ./mvnw dependency:go-offline -B -Dmaven.multiModuleProjectDirectory=/build
@@ -17,7 +18,7 @@ RUN ./mvnw dependency:go-offline -B -Dmaven.multiModuleProjectDirectory=/build
 COPY src ./src
 
 # Build the application
-RUN ./mvnw clean package -DskipTests -B -Dmaven.multiModuleProjectDirectory=/build \
+RUN ./mvnw clean package -DskipTests -Dmaven.test.skip=true -B -Dmaven.multiModuleProjectDirectory=/build \
     && mkdir -p target/dependency \
     && (cd target/dependency; jar -xf ../*.jar)
 

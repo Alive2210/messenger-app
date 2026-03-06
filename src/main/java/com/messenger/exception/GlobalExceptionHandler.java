@@ -1,5 +1,7 @@
 package com.messenger.exception;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,13 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    private boolean isProduction() {
+        return "prod".equalsIgnoreCase(activeProfile);
+    }
 
     @Data
     @AllArgsConstructor
@@ -52,17 +61,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex, WebRequest request) {
-        log.error("Unexpected error occurred", ex);
-        
+        log.error("Unexpected error: ", ex);
+
+        String message = isProduction()
+                ? "An unexpected error occurred. Please try again later."
+                : ex.getMessage();
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
-                "An unexpected error occurred. Please try again later.",
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                message,
+                request.getDescription(false).replace("uri=", ""));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
@@ -70,14 +80,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
         log.error("Business logic error: {}", ex.getMessage());
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Bad Request",
                 ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                request.getDescription(false).replace("uri=", ""));
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -85,14 +94,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, WebRequest request) {
         log.warn("Authentication failed: {}", ex.getMessage());
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 "Unauthorized",
                 "Invalid username or password",
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                request.getDescription(false).replace("uri=", ""));
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
@@ -100,14 +108,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, WebRequest request) {
         log.warn("Access denied: {}", ex.getMessage());
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
                 "Forbidden",
                 "You don't have permission to access this resource",
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                request.getDescription(false).replace("uri=", ""));
+
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
@@ -115,24 +122,23 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex, WebRequest request) {
-        
+
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        
+
         log.warn("Validation failed: {}", errors);
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Failed",
                 "Input validation failed",
                 request.getDescription(false).replace("uri=", ""),
-                errors
-        );
-        
+                errors);
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -140,29 +146,28 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
         log.warn("Resource not found: {}", ex.getMessage());
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 "Not Found",
                 ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                request.getDescription(false).replace("uri=", ""));
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(DeviceAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ResponseEntity<ErrorResponse> handleDeviceAlreadyExists(DeviceAlreadyExistsException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleDeviceAlreadyExists(DeviceAlreadyExistsException ex,
+            WebRequest request) {
         log.warn("Device conflict: {}", ex.getMessage());
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 "Conflict",
                 ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                request.getDescription(false).replace("uri=", ""));
+
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
@@ -170,14 +175,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     public ResponseEntity<ErrorResponse> handleMaxDevicesExceeded(MaxDevicesExceededException ex, WebRequest request) {
         log.warn("Max devices exceeded: {}", ex.getMessage());
-        
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.TOO_MANY_REQUESTS.value(),
                 "Too Many Devices",
                 ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        
+                request.getDescription(false).replace("uri=", ""));
+
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(error);
     }
 }

@@ -2,6 +2,7 @@
 
 echo "📋 Logs for Secure Messenger"
 echo ""
+COMPOSE_FILE=${COMPOSE_FILE:-docker-compose.yml}
 
 if [ "$1" == "app" ] || [ "$1" == "" ]; then
     echo "=== Application Logs ==="
@@ -14,7 +15,7 @@ fi
 
 if [ "$1" == "docker" ]; then
     echo "=== Docker Logs ==="
-    docker-compose -f docker-compose.prod.yml logs -f
+    docker-compose -f $COMPOSE_FILE logs -f
 fi
 
 if [ "$1" == "nginx" ]; then
@@ -22,6 +23,6 @@ if [ "$1" == "nginx" ]; then
     if [ -f logs/nginx/access.log ]; then
         tail -f logs/nginx/access.log
     else
-        docker-compose -f docker-compose.prod.yml logs -f nginx
+        docker-compose -f $COMPOSE_FILE logs -f nginx
     fi
 fi

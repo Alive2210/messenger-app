@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     // Конфигурация лимитов
-    private static final int DEFAULT_MAX_REQUESTS = 1000; // запросов
+    private static final int DEFAULT_MAX_REQUESTS = 10000; // запросов
     private static final Duration DEFAULT_WINDOW = Duration.ofMinutes(1); // в минуту
-    private static final int AUTH_MAX_REQUESTS = 100; // для auth endpoints
+    private static final int AUTH_MAX_REQUESTS = 1000; // для auth endpoints
     private static final Duration AUTH_WINDOW = Duration.ofMinutes(1);
-    private static final int BLOCK_DURATION_MINUTES = 5; // время блокировки
+    private static final int BLOCK_DURATION_MINUTES = 1; // время блокировки
 
     // Хранилище счетчиков запросов по IP
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
@@ -48,22 +48,33 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         
         String clientIp = getClientIP(request);
         String path = request.getRequestURI();
+        String method = request.getMethod();
         
-        // Разрешаем localhost без ограничений
-        if ("0:0:0:0:0:0:0:1".equals(clientIp) || "127.0.0.1".equals(clientIp) || 
-            "localhost".equals(clientIp) || clientIp.startsWith("192.168.") ||
-            clientIp.startsWith("10.") || clientIp.startsWith("172.16.") || clientIp.startsWith("172.17.") || clientIp.startsWith("172.18.")) {
+        // ИСКЛЮЧЕНИЯ - не проверяем rate limit для:
+        // 1. Health checks и actuator
+        // 2. Preflight (OPTIONS) запросов
+        // 3. Статических ресурсов
+        // 4. WebSocket соединений
+        // 5. Локальных IP
+        if (isExcluded(path, method)) {
             filterChain.doFilter(request, response);
             return;
         }
         
-        // Проверяем, не заблокирован ли IP
-        if (isBlocked(clientIp)) {
-            log.warn("🚫 Blocked IP {} attempted access to {}", clientIp, path);
-            sendErrorResponse(response, HttpStatus.FORBIDDEN, 
-                    "Your IP has been temporarily blocked due to too many requests. " +
-                    "Please try again in " + BLOCK_DURATION_MINUTES + " minutes.");
+        // Разрешаем localhost без ограничений
+        if ("0:0:0:0:0:0:0:1".equals(clientIp) || "127.0.0.1".equals(clientIp) || 
+            "localhost".equals(clientIp) || clientIp.startsWith("192.168.") ||
+            clientIp.startsWith("10.") || clientIp.startsWith("172.16.") || clientIp.startsWith("172.17.") || 
+            clientIp.startsWith("172.18.") || clientIp.startsWith("172.19.") || clientIp.startsWith("172.20.") ||
+            clientIp.startsWith("172.30.") || clientIp.startsWith("172.31.")) {
+            filterChain.doFilter(request, response);
             return;
+        }
+        
+        // Проверяем, не заблокирован ли IP - НЕ БЛОКИРУЕМ, просто ограничиваем
+        if (isBlocked(clientIp)) {
+            // Не блокируем, а просто замедляем
+            log.debug("Rate limited IP {} - allowing with warning", clientIp);
         }
         
         // Определяем лимиты в зависимости от endpoint
@@ -72,14 +83,14 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         
         // Проверяем лимит
         if (isRateLimitExceeded(clientIp, maxRequests, window)) {
-            log.warn("⚠️ Rate limit exceeded for IP {} on endpoint {}", clientIp, path);
+            log.warn("Rate limit exceeded for IP {} on endpoint {} (limit: {}/{}s)", 
+                clientIp, path, maxRequests, window.getSeconds());
             
-            // Блокируем IP если слишком много нарушений
-            blockIp(clientIp);
-            
-            sendErrorResponse(response, HttpStatus.TOO_MANY_REQUESTS, 
-                    "Too many requests. Please slow down. " +
-                    "Your IP has been temporarily blocked.");
+            // НЕ БЛОКИРУЕМ IP - только возвращаем 429
+            // addRateLimitHeaders(response, clientIp, maxRequests); // REMOVED - causes issues
+            response.setStatus(429);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Too Many Requests\",\"message\":\"Please try again later\",\"retryAfter\":60}");
             return;
         }
         
@@ -87,6 +98,39 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         addRateLimitHeaders(response, clientIp, maxRequests);
         
         filterChain.doFilter(request, response);
+    }
+    
+    /**
+     * Проверяет, нужно ли исключить запрос из rate limiting
+     */
+    private boolean isExcluded(String path, String method) {
+        // Preflight OPTIONS - всегда разрешаем
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
+        
+        // Health checks
+        if (path.startsWith("/actuator/health") || path.equals("/health") || path.equals("/actuator/info")) {
+            return true;
+        }
+        
+        // Статические ресурсы
+        if (path.startsWith("/static/") || path.startsWith("/assets/") || 
+            path.startsWith("/images/") || path.startsWith("/css/") || 
+            path.startsWith("/js/") || path.endsWith(".html") || 
+            path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") ||
+            path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".gif") ||
+            path.endsWith(".ico") || path.endsWith(".svg") || path.endsWith(".woff") ||
+            path.endsWith(".woff2") || path.endsWith(".ttf")) {
+            return true;
+        }
+        
+        // WebSocket
+        if (path.startsWith("/ws") || path.startsWith("/websocket")) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**

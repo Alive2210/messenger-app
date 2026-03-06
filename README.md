@@ -67,37 +67,29 @@
 - Запись конференций
 - Mute/unmute, вкл/выкл камеры
 
-## Запуск проекта
+## Запуск проекта (Упрощенно)
 
-### 1. Запуск инфраструктуры
+Для запуска системы используйте один из подготовленных сценариев в корневой директории:
 
+### 1. Режим для 30 пользователей (Рекомендуемый)
+Использует расширенную конфигурацию инфраструктуры и запускает фронтенд + бэкенд в Docker.
 ```bash
-cd docker
-docker-compose up -d
+start-30-users.bat
+```
+*В скрипте выберите `[1] Full Docker` для автоматического поднятия всех сервисов.*
+
+### 2. Режим для 2-3 пользователей
+Минимальные ресурсы, подходит для быстрой проверки.
+```bash
+start-2-3-users.bat
 ```
 
-Запустит:
-- PostgreSQL на порту 5432
-- RabbitMQ на порту 5672 (UI: http://localhost:15672)
-- MinIO на порту 9000 (Console: http://localhost:9001)
-- Redis на порту 6379
-- TURN Server на порту 3478 (UDP/TCP) - для WebRTC через VPN
-
-### 2. Сборка и запуск приложения
-
-```bash
-# Сборка
-mvn clean package
-
-# Запуск
-mvn spring-boot:run
-```
-
-Или с Docker:
-```bash
-docker build -t secure-messenger .
-docker run -p 8080:8080 secure-messenger
-```
+### Доступ к сервисам:
+- **Приложение (Nginx):** https://[ВАШ_IP]
+- **API (Бэкенд):** http://[ВАШ_IP]:8080
+- **Health Check:** http://[ВАШ_IP]:8080/actuator/health
+- **RabbitMQ:** http://localhost:15672 (guest/guest)
+- **MinIO Console:** http://localhost:9001 (minioadmin/minioadmin)
 
 ## API Endpoints
 

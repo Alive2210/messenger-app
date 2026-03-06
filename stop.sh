@@ -16,6 +16,11 @@ fi
 
 # Stop Docker containers
 echo "Stopping Docker containers..."
-docker-compose -f docker-compose.prod.yml down
+COMPOSE_FILE=${COMPOSE_FILE:-docker-compose.yml}
+if command -v docker-compose &> /dev/null; then
+    docker-compose -f $COMPOSE_FILE down
+else
+    docker compose -f $COMPOSE_FILE down
+fi
 
 echo "✅ All services stopped"

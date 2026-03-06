@@ -19,17 +19,14 @@ import java.time.Instant;
  * Represents an audio message sent by a user in a chat.
  */
 @Entity
-@Table(
-        name = "voice_messages",
-        indexes = {
-                @Index(name = "idx_voice_message_id", columnList = "messageId"),
-                @Index(name = "idx_voice_chat_id", columnList = "chatId"),
-                @Index(name = "idx_voice_sender_id", columnList = "senderId"),
-                @Index(name = "idx_voice_created_at", columnList = "createdAt"),
-                @Index(name = "idx_voice_is_played", columnList = "isPlayed"),
-                @Index(name = "idx_voice_duration", columnList = "duration")
-        }
-)
+@Table(name = "voice_messages", indexes = {
+        @Index(name = "idx_voice_message_id", columnList = "message_id"),
+        @Index(name = "idx_voice_chat_id", columnList = "chat_id"),
+        @Index(name = "idx_voice_sender_id", columnList = "sender_id"),
+        @Index(name = "idx_voice_created_at", columnList = "created_at"),
+        @Index(name = "idx_voice_is_played", columnList = "is_played"),
+        @Index(name = "idx_voice_duration", columnList = "duration")
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -40,31 +37,31 @@ public class VoiceMessage {
      * Primary key identifier.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private java.util.UUID id;
 
     /**
-     * Unique identifier of the voice message.
+     * Unique identifier of the associated message.
      */
     @Column(name = "message_id", nullable = false, unique = true)
-    private String messageId;
+    private java.util.UUID messageId;
 
     /**
      * Unique identifier of the chat/conversation.
      */
     @Column(name = "chat_id", nullable = false)
-    private String chatId;
+    private java.util.UUID chatId;
 
     /**
      * Unique identifier of the user who sent the voice message.
      */
     @Column(name = "sender_id", nullable = false)
-    private String senderId;
+    private java.util.UUID senderId;
 
     /**
      * Duration of the voice message in seconds.
      */
-    @Column(name = "duration", nullable = false)
+    @Column(name = "duration_seconds", nullable = false)
     private Integer duration;
 
     /**
@@ -77,7 +74,7 @@ public class VoiceMessage {
      * Waveform data as JSON array representing audio amplitude visualization.
      * Example: [0.2, 0.5, 0.8, 0.3, 0.1]
      */
-    @Column(name = "waveform", columnDefinition = "TEXT")
+    @Column(name = "waveform_data", columnDefinition = "TEXT")
     private String waveform;
 
     /**
@@ -101,7 +98,7 @@ public class VoiceMessage {
     /**
      * Whether the voice message has been played by the recipient.
      */
-    @Column(name = "is_played", nullable = false)
+    @Column(name = "is_listened", nullable = false)
     @Builder.Default
     private Boolean isPlayed = false;
 
@@ -124,9 +121,9 @@ public class VoiceMessage {
      * @param mimeType  the MIME type of the audio
      * @return new VoiceMessage instance
      */
-    public static VoiceMessage create(String messageId, String chatId, String senderId,
-                                       String audioUrl, Integer duration, String waveform,
-                                       Long fileSize, String mimeType) {
+    public static VoiceMessage create(java.util.UUID messageId, java.util.UUID chatId, java.util.UUID senderId,
+            String audioUrl, Integer duration, String waveform,
+            Long fileSize, String mimeType) {
         return VoiceMessage.builder()
                 .messageId(messageId)
                 .chatId(chatId)
