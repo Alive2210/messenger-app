@@ -7604,3 +7604,6 @@ java.lang.RuntimeException: Message not found
 2026-03-18 22:10:55.202 [MessageBroker-4] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
 2026-03-18 22:11:05.199 [MessageBroker-8] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
 2026-03-18 22:11:15.199 [MessageBroker-5] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-18 22:11:25.199 [MessageBroker-1] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
+2026-03-18 22:11:25.203 [MessageBroker-4] INFO  [] [] c.m.service.PresenceScheduler - Presence stats - ONLINE: 0, AWAY: 0, BUSY: 0, OFFLINE: 0
+2026-03-18 22:11:35.196 [MessageBroker-6] INFO  [] [] com.messenger.service.DeviceService - Cleaned up 0 stale devices
