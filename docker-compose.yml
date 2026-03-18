@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -18,7 +16,7 @@ services:
       - messenger-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-messenger_user} -d ${DB_NAME:-messenger_db}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-messenger_user} -d ${DB_NAME:-messenger_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,10 +38,10 @@ services:
       - messenger-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 15s
+      retries: 10
       start_period: 30s
 
   # MinIO Object Storage
@@ -63,19 +61,33 @@ services:
       - messenger-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "mc", "ready", "local" ]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  # Create MinIO bucket
+  # Create MinIO bucket with public read policy
   minio-init:
     image: minio/mc:latest
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c " sleep 10; /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin}; /usr/bin/mc mb myminio/messenger-files || true; /usr/bin/mc policy set public myminio/messenger-files || true; exit 0; "
+      /bin/sh -c "
+      echo 'Waiting for MinIO to be ready...';
+      sleep 15;
+      echo 'Configuring MinIO host...';
+      /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin} --api S3v4;
+      echo 'Creating bucket if not exists...';
+      /usr/bin/mc mb myminio/messenger-files --ignore-existing || true;
+      echo 'Setting bucket policy to download (public read)...';
+      /usr/bin/mc anonymous set download myminio/messenger-files;
+      echo 'Listing buckets...';
+      /usr/bin/mc ls myminio;
+      echo 'Getting bucket policy...';
+      /usr/bin/mc anonymous get myminio/messenger-files || true;
+      echo 'MinIO initialization complete!';
+      exit 0;"
     networks:
       - messenger-network
 
@@ -91,13 +103,13 @@ services:
       - messenger-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  # Spring Boot Application
+  # Spring Boot Backend Application
   app:
     build:
       context: .
@@ -136,7 +148,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
 
-      # JWT - NO DEFAULT VALUE!
+      # JWT - REQUIRED!
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
 
@@ -148,18 +160,42 @@ services:
       # Application
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: prod
-      SERVER_URL: ${SERVER_URL:-http://localhost}
+      SERVER_URL: ${SERVER_URL:-https://localhost}
+      
+      # Network - External IP for WebRTC/TURN
+      NETWORK_EXTERNAL_IP: ${NETWORK_EXTERNAL_IP:-192.168.88.183}
+      NETWORK_AUTO_DETECT_IP: ${NETWORK_AUTO_DETECT_IP:-true}
+      SPRING_APPLICATION_JSON: '{"network":{"external-ip":"192.168.88.183"}}'
     volumes:
       - ./logs:/app/logs
     networks:
       - messenger-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # React Frontend (optional - nginx can serve static files directly)
+  frontend:
+    build:
+      context: ./messenger-client
+      dockerfile: Dockerfile
+    container_name: messenger-frontend
+    depends_on:
+      - app
+    networks:
+      - messenger-network
+    restart: unless-stopped
+    healthcheck:
+      # Use 127.0.0.1 to avoid localhost -> ::1 IPv6 resolution issues in alpine images.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   # Nginx Reverse Proxy
   nginx:
@@ -167,6 +203,7 @@ services:
     container_name: messenger-nginx
     depends_on:
       - app
+      - frontend
     ports:
       - "80:80"
       - "443:443"
@@ -179,13 +216,68 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+    healthcheck:
+      # Self-signed local cert: healthcheck must not fail TLS verification.
+      # Use 127.0.0.1 to avoid localhost -> ::1 IPv6 resolution issues in alpine images.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--no-check-certificate", "https://127.0.0.1:443/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # TURN Server (coturn) for WebRTC NAT traversal
+  coturn:
+    image: coturn/coturn:latest
+    container_name: messenger-coturn
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+      - "49152-49200:49152-49200/udp"
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./nginx/ssl:/etc/coturn/certs:ro
+    environment:
+      TURN_EXTERNAL_IP: ${NETWORK_EXTERNAL_IP:-192.168.88.183}
+      TURN_RELAY_IP: 0.0.0.0
+      TURN_REALM: ${TURN_REALM:-messenger.local}
+      TURN_SERVER_NAME: ${TURN_SERVER_NAME:-turn.messenger.local}
+      TURN_USER: ${TURN_USER:-messenger}
+      TURN_PASS: ${TURN_PASS:-secure_password_123}
+    networks:
+      - messenger-network
+    restart: unless-stopped
+
+  # Mediasoup SFU for group video conferencing
+  mediasoup-sfu:
+    build:
+      context: ./mediasoup-sfu
+      dockerfile: Dockerfile
+    container_name: messenger-sfu
+    depends_on:
+      - app
+    ports:
+      - "3000:3000"
+      - "40000-40500:40000-40500/udp"
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: "*"
+      MEDIASOUP_LISTEN_IP: 0.0.0.0
+      MEDIASOUP_ANNOUNCED_IP: ${NETWORK_EXTERNAL_IP:-192.168.88.183}
+      MEDIASOUP_MIN_PORT: 40000
+      MEDIASOUP_MAX_PORT: 40500
+      LOG_LEVEL: debug
+    networks:
+      - messenger-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   rabbitmq_data:
   minio_data:
   redis_data:
-
 
 networks:
   messenger-network:

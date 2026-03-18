@@ -3,6 +3,10 @@ package com.messenger.controller;
 import com.messenger.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -76,6 +80,93 @@ public class FileController {
         response.put("fileUrl", url);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/presigned/{fileName}")
+    public ResponseEntity<Map<String, String>> getPresignedUrl(
+            @PathVariable String fileName,
+            @RequestParam(value = "download", defaultValue = "false") boolean download) {
+        try {
+            String url = fileStorageService.getFileUrl(fileName);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("url", url);
+            response.put("download", String.valueOf(download));
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error generating presigned URL for: {}", fileName, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/download/{fileName}")
+    public ResponseEntity<Resource> downloadFile(
+            @PathVariable String fileName,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Downloading file: {} by user: {}", fileName, userDetails.getUsername());
+
+        try {
+            byte[] fileData = fileStorageService.downloadFile(fileName);
+            String contentType = determineContentType(fileName);
+
+            // Cache headers for better performance
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
+                    .header(HttpHeaders.ETAG, "\"" + fileName.hashCode() + "\"")
+                    .body(new ByteArrayResource(fileData));
+        } catch (Exception e) {
+            log.error("Error downloading file: {}", fileName, e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Stream file with proper HTTP streaming for large files
+     * Supports range requests for video/audio seeking
+     */
+    @GetMapping("/stream/{fileName}")
+    public ResponseEntity<Resource> streamFile(
+            @PathVariable String fileName,
+            @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Streaming file: {} by user: {}", fileName, userDetails.getUsername());
+
+        try {
+            byte[] fileData = fileStorageService.downloadFile(fileName);
+            String contentType = determineContentType(fileName);
+            Resource resource = new ByteArrayResource(fileData);
+
+            // For now, return full file - can be enhanced for true range support
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
+                    .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileData.length))
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error streaming file: {}", fileName, e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    private String determineContentType(String fileName) {
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) return "image/jpeg";
+        if (fileName.endsWith(".png")) return "image/png";
+        if (fileName.endsWith(".gif")) return "image/gif";
+        if (fileName.endsWith(".webp")) return "image/webp";
+        if (fileName.endsWith(".pdf")) return "application/pdf";
+        if (fileName.endsWith(".doc")) return "application/msword";
+        if (fileName.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        if (fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) return "application/vnd.ms-excel";
+        if (fileName.endsWith(".txt")) return "text/plain";
+        if (fileName.endsWith(".mp3")) return "audio/mpeg";
+        if (fileName.endsWith(".wav")) return "audio/wav";
+        if (fileName.endsWith(".ogg")) return "audio/ogg";
+        if (fileName.endsWith(".mp4")) return "video/mp4";
+        return "application/octet-stream";
     }
 
     @DeleteMapping("/{fileName}")

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * JWT Authentication Filter
+ * 
+ * Intercepts all requests and:
+ * 1. Extracts JWT token from Authorization header
+ * 2. Validates the token
+ * 3. Sets authentication in SecurityContext
+ * 
+ * Token format: "Bearer <token>"
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -26,63 +37,64 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
-        try {
-            String jwt = getJwtFromRequest(request);
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-            if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+        try {
+            String jwt = extractJwtFromRequest(request);
+
+            if (jwt != null && jwtTokenProvider.validateToken(jwt)) {
                 String username = jwtTokenProvider.getUsernameFromToken(jwt);
+                String deviceId = jwtTokenProvider.extractDeviceId(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.debug("Set authentication for user: {} (device: {})", username, deviceId);
             }
-        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
-            log.warn("JWT token is expired: {}", ex.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Token expired\"}");
-            return;
-        } catch (io.jsonwebtoken.JwtException ex) {
-            log.warn("Invalid JWT token: {}", ex.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Invalid token\"}");
-            return;
-        } catch (Exception ex) {
-            log.error("Could not set user authentication in security context", ex);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication failed\"}");
-            return;
+        } catch (Exception e) {
+            log.error("Cannot set user authentication: {}", e.getMessage());
+            // Continue without authentication - endpoint may be public
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromRequest(HttpServletRequest request) {
+    /**
+     * Extract JWT token from request
+     * 
+     * Supports:
+     * - Authorization header: "Bearer <token>"
+     * - Query parameter: token=<token> (for WebSocket)
+     */
+    private String extractJwtFromRequest(HttpServletRequest request) {
+        // Check Authorization header first
         String bearerToken = request.getHeader("Authorization");
+        
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        return null;
-    }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.startsWith("/ws") ||
-                path.startsWith("/api/auth/") ||
-                path.equals("/") ||
-                path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") ||
-                path.startsWith("/actuator/health");
+        // Fallback to query parameter (for WebSocket connections)
+        String token = request.getParameter("token");
+        if (StringUtils.hasText(token)) {
+            return token;
+        }
+
+        return null;
     }
 }

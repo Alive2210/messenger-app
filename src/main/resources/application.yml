@@ -1,6 +1,21 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8443}
   address: 0.0.0.0
+  ssl:
+    enabled: true
+    key-store: classpath:ssl/server.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: server
+    protocol: TLS
+    enabled-protocols:
+      - TLSv1.2
+      - TLSv1.3
+    ciphers:
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+      - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+      - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
   error:
     include-message: always
   servlet:
@@ -8,7 +23,14 @@ server:
       cookie:
         http-only: true
         secure: true
-        same-site: none
+        same-site: strict
+  http2:
+    enabled: true
+  encoding:
+    charset: UTF-8
+    force: true
+    force-request: true
+    force-response: true
 
 spring:
   jackson:
@@ -17,7 +39,7 @@ spring:
 
   application:
     name: secure-messenger
-  
+
   datasource:
     url: jdbc:postgresql://localhost:5432/messenger_db
     username: ${DB_USERNAME:messenger_user}
@@ -62,6 +84,13 @@ spring:
       max-file-size: 1024MB
       max-request-size: 1024MB
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
 # JWT Configuration - NO DEFAULT VALUE!
 jwt:
   secret: ${JWT_SECRET}
@@ -92,7 +121,7 @@ webrtc:
     - url: stun:stun.l.google.com:19302
     - url: stun:stun1.l.google.com:19302
   turn-server:
-    enabled: false
+    enabled: true
 
 # Logging
 logging:
@@ -114,7 +143,7 @@ device:
 # Application URLs for QR codes
 app:
   server:
-    url: ${SERVER_URL:http://localhost:8080}
+    url: ${SERVER_URL:https://localhost:8443}
   websocket:
     url: ${WEBSOCKET_URL:/ws}
 
@@ -130,24 +159,49 @@ management:
 
 # VAPID keys for push notifications - MUST BE SET IN ENVIRONMENT
 vapid:
-  public-key: ${VAPID_PUBLIC_KEY}
-  private-key: ${VAPID_PRIVATE_KEY}
+  public:
+    key: ${VAPID_PUBLIC_KEY}
+  private:
+    key: ${VAPID_PRIVATE_KEY}
   subject: ${VAPID_SUBJECT:mailto:admin@example.com}
 
-# SFU (Mediasoup) Configuration  
-sfu:  
-  base-url: http://localhost:3000  
-  timeout: 5000  
-  max-rooms-per-node: 10  
-  heartbeat-interval: 10000 
+# SFU (Mediasoup) Configuration
+sfu:
+  base-url: http://localhost:3000
+  timeout: 5000
+  max-rooms-per-node: 10
+  heartbeat-interval: 10000
 
 # Rate Limiter Configuration
 resilience4j:
   ratelimiter:
     instances:
       login:
-        limit-for-period: 1000
-        limit-refresh-period: 1s
+        limit-for-period: 5
+        limit-refresh-period: 60s
         timeout-duration: 0
         register-health-indicator: true
         event-consumer-buffer-size: 100
+      register:
+        limit-for-period: 3
+        limit-refresh-period: 60s
+        timeout-duration: 0
+        register-health-indicator: true
+        event-consumer-buffer-size: 100
+      refresh:
+        limit-for-period: 10
+        limit-refresh-period: 60s
+        timeout-duration: 0
+        register-health-indicator: true
+        event-consumer-buffer-size: 100
+
+# Security headers
+security:
+  headers:
+    hsts:
+      enabled: true
+      max-age: 31536000
+      include-subdomains: true
+    content-type-options: nosniff
+    x-frame-options: DENY
+    x-xss-protection: "1; mode=block"

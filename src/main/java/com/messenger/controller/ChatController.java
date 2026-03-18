@@ -1,11 +1,16 @@
 package com.messenger.controller;
 
 import com.messenger.dto.ChatDTOs.*;
+import com.messenger.dto.FileAttachmentDTO;
 import com.messenger.dto.MessageDTO;
+import com.messenger.dto.PaginatedResponse;
+import com.messenger.dto.SendMessageRequest;
+import com.messenger.dto.VoiceMessageDTO;
 import com.messenger.service.ChatService;
 import com.messenger.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -121,6 +126,46 @@ public class ChatController {
         return ResponseEntity.ok(messages);
     }
 
+    @GetMapping("/{chatId}/messages/paginated")
+    public ResponseEntity<PaginatedResponse<MessageDTO>> getChatMessagesPaginated(
+            @PathVariable UUID chatId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("Getting paginated messages for chat {} by user {}", chatId, userDetails.getUsername());
+        PaginatedResponse<MessageDTO> response = messageService.getChatMessagesPaginated(
+                chatId, userDetails.getUsername(), page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{chatId}/messages")
+    public ResponseEntity<MessageDTO> sendMessage(
+            @PathVariable UUID chatId,
+            @RequestBody SendMessageRestRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        SendMessageRequest serviceRequest = SendMessageRequest.builder()
+                .chatId(chatId)
+                .encryptedContent(firstNonBlank(request.getEncryptedContent(), request.getContent()))
+                .encryptionIv(request.getEncryptionIv())
+                .messageType(request.getMessageType() != null ? request.getMessageType() : "TEXT")
+                .replyToMessageId(request.getReplyToMessageId() != null ? request.getReplyToMessageId() : request.getReplyToId())
+                .fileAttachment(request.getFileAttachment())
+                .voiceMessage(request.getVoiceMessage())
+                .clientMessageId(request.getClientMessageId())
+                .build();
+
+        MessageDTO message = messageService.sendMessage(serviceRequest, userDetails.getUsername());
+        return ResponseEntity.ok(message);
+    }
+
+    @PostMapping("/{chatId}/read")
+    public ResponseEntity<Void> markChatAsRead(
+            @PathVariable UUID chatId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        messageService.markMessagesAsRead(chatId, userDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{chatId}")
     public ResponseEntity<Void> deleteChat(
             @PathVariable UUID chatId,
@@ -128,5 +173,24 @@ public class ChatController {
         log.info("Deleting chat {} by user {}", chatId, userDetails.getUsername());
         chatService.deleteChat(chatId, userDetails.getUsername());
         return ResponseEntity.ok().build();
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        if (a != null && !a.isBlank()) return a;
+        if (b != null && !b.isBlank()) return b;
+        return "";
+    }
+
+    @Data
+    public static class SendMessageRestRequest {
+        private String content;
+        private String encryptedContent;
+        private String encryptionIv;
+        private String messageType;
+        private UUID replyToId;
+        private UUID replyToMessageId;
+        private FileAttachmentDTO fileAttachment;
+        private VoiceMessageDTO voiceMessage;
+        private String clientMessageId;
     }
 }

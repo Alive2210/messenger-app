@@ -148,7 +148,7 @@ public interface MessageReactionRepository extends JpaRepository<MessageReaction
      */
     @Modifying
     @Query("DELETE FROM MessageReaction mr WHERE mr.timestamp < :timestamp")
-    int deleteByTimestampBefore(@Param("timestamp") Instant timestamp);
+    int deleteByCreatedAtBefore(@Param("timestamp") Instant timestamp);
 
     /**
      * Gets distinct emoji codes used for a specific message.

@@ -1,31 +1,20 @@
 package com.messenger.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import jakarta.persistence.*;
+import lombok.*;
 import java.time.Instant;
+import java.util.UUID;
 
 /**
- * JPA entity for storing voice messages.
- * Represents an audio message sent by a user in a chat.
+ * Entity representing a voice message attachment.
  */
 @Entity
 @Table(name = "voice_messages", indexes = {
         @Index(name = "idx_voice_message_id", columnList = "message_id"),
         @Index(name = "idx_voice_chat_id", columnList = "chat_id"),
         @Index(name = "idx_voice_sender_id", columnList = "sender_id"),
-        @Index(name = "idx_voice_created_at", columnList = "created_at"),
         @Index(name = "idx_voice_is_played", columnList = "is_played"),
-        @Index(name = "idx_voice_duration", columnList = "duration")
+        @Index(name = "idx_voice_duration", columnList = "duration_seconds")
 })
 @Data
 @Builder
@@ -46,9 +35,6 @@ public class VoiceMessage {
     @Column(name = "message_id", nullable = false, unique = true)
     private java.util.UUID messageId;
 
-    /**
-     * Unique identifier of the chat/conversation.
-     */
     @Column(name = "chat_id", nullable = false)
     private java.util.UUID chatId;
 
@@ -71,14 +57,13 @@ public class VoiceMessage {
     private String audioUrl;
 
     /**
-     * Waveform data as JSON array representing audio amplitude visualization.
-     * Example: [0.2, 0.5, 0.8, 0.3, 0.1]
+     * JSON string representing the simplified waveform of the audio.
      */
     @Column(name = "waveform_data", columnDefinition = "TEXT")
     private String waveform;
 
     /**
-     * File size in bytes.
+     * Size of the audio file in bytes.
      */
     @Column(name = "file_size", nullable = false)
     private Long fileSize;
@@ -96,14 +81,14 @@ public class VoiceMessage {
     private Instant createdAt;
 
     /**
-     * Whether the voice message has been played by the recipient.
+     * Flag indicating whether the voice message has been played by the recipient.
      */
-    @Column(name = "is_listened", nullable = false)
+    @Column(name = "is_played", nullable = false)
     @Builder.Default
-    private Boolean isPlayed = false;
+    private boolean isPlayed = false;
 
     /**
-     * Text transcript of the voice message (from speech-to-text).
+     * Transcribed text content of the voice message (optional).
      */
     @Column(name = "transcript", columnDefinition = "TEXT")
     private String transcript;
@@ -146,20 +131,11 @@ public class VoiceMessage {
     }
 
     /**
-     * Updates the transcript of the voice message.
+     * Updates the transcription content.
      *
-     * @param transcript the text transcript
+     * @param transcript the transcribed text
      */
     public void updateTranscript(String transcript) {
         this.transcript = transcript;
-    }
-
-    /**
-     * Checks if the voice message has been played.
-     *
-     * @return true if played
-     */
-    public boolean isPlayed() {
-        return this.isPlayed != null && this.isPlayed;
     }
 }

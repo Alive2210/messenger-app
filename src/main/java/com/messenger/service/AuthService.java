@@ -8,6 +8,7 @@ import com.messenger.logging.MessengerLogger;
 import com.messenger.repository.DeviceRepository;
 import com.messenger.repository.UserRepository;
 import com.messenger.security.JwtTokenProvider;
+import com.messenger.security.PBKDF2Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.KeyPair;
+import java.util.HashMap;
 import java.util.Base64;
 
 @Slf4j
@@ -33,6 +35,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EncryptionService encryptionService;
+    private final PBKDF2Service pbkdf2Service;
 
     @Transactional
     @Auditable(action = "USER_REGISTRATION")
@@ -52,13 +55,25 @@ public class AuthService {
         // Generate RSA key pair for E2E encryption if not provided
         String publicKey = request.getPublicKey();
         String encryptedPrivateKey = null;
+        String salt = null;
 
         if (publicKey == null || publicKey.isEmpty()) {
             KeyPair keyPair = encryptionService.generateRSAKeyPair();
             publicKey = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
-            // FIX: Encrypt private key with user's password (password known only to client)
-            String privateKey = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
-            encryptedPrivateKey = encryptionService.encryptMessage(privateKey, request.getPassword());
+            
+            try {
+                String privateKey = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
+                
+                // SECURE: Generate random salt and derive AES key using PBKDF2
+                salt = pbkdf2Service.generateSalt();
+                String aesKey = pbkdf2Service.deriveKeyFromPassword(request.getPassword(), salt);
+                encryptedPrivateKey = encryptionService.encryptMessage(privateKey, aesKey);
+                
+                log.info("Private key encrypted with PBKDF2-derived AES key for user: {}", request.getUsername());
+            } catch (Exception e) {
+                log.error("Failed to encrypt private key, registration will fail", e);
+                throw new RuntimeException("Failed to encrypt private key: " + e.getMessage(), e);
+            }
         }
 
         // Create user
@@ -68,6 +83,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .publicKey(publicKey)
                 .privateKeyEncrypted(encryptedPrivateKey)
+                .passwordSalt(salt) // Store salt for key derivation
                 .phoneNumber(request.getPhoneNumber())
                 .isOnline(false)
                 .build();
@@ -100,16 +116,19 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            // Use the authenticated principal name (may differ from the identifier the user typed, e.g. email).
+            String authenticatedUsername = authentication.getName();
+
             // Generate token with device ID if provided
             String accessToken;
             if (deviceId != null && !deviceId.isEmpty()) {
-                accessToken = jwtTokenProvider.generateTokenForDevice(username, deviceId);
+                accessToken = jwtTokenProvider.generateTokenForDevice(authenticatedUsername, deviceId);
             } else {
                 accessToken = jwtTokenProvider.generateToken(authentication);
             }
-            String refreshToken = jwtTokenProvider.generateRefreshToken(username);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(authenticatedUsername);
 
-            User user = userRepository.findByUsername(username)
+            User user = userRepository.findByUsername(authenticatedUsername)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
             // Update online status
@@ -121,7 +140,7 @@ public class AuthService {
                 registerDevice(user, deviceId, deviceName, deviceType, osVersion, appVersion);
             }
 
-            log.info("User {} logged in successfully (device: {})", username, deviceId);
+            log.info("User {} logged in successfully (device: {})", authenticatedUsername, deviceId);
 
             return AuthResponseDTO.builder()
                     .accessToken(accessToken)
@@ -132,7 +151,8 @@ public class AuthService {
                     .build();
 
         } catch (BadCredentialsException e) {
-            throw new IllegalArgumentException("Invalid credentials");
+            MessengerLogger.securityAuthFailure(username, "INVALID_CREDENTIALS", deviceId);
+            throw e;
         }
     }
 
@@ -178,9 +198,8 @@ public class AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        String newAccessToken = jwtTokenProvider.generateToken(
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                        user.getUsername(), null, java.util.Collections.emptyList()));
+        // JwtTokenProvider.generateToken(Authentication) expects a UserDetails principal; generate token directly.
+        String newAccessToken = jwtTokenProvider.generateToken(new HashMap<>(), user.getUsername());
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(username);
 
         return AuthResponseDTO.builder()

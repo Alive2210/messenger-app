@@ -42,6 +42,9 @@ public class User {
     @Column(name = "private_key_encrypted", columnDefinition = "TEXT")
     private String privateKeyEncrypted; // Encrypted private key stored on server
 
+    @Column(name = "password_salt", columnDefinition = "TEXT")
+    private String passwordSalt; // Salt for PBKDF2 key derivation
+
     @Column(name = "is_online")
     private Boolean isOnline = false;
 

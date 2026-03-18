@@ -108,7 +108,7 @@ public class MessageService {
         if (request.getVoiceMessage() != null && messageType == Message.MessageType.VOICE) {
             VoiceMessageDTO voiceDto = request.getVoiceMessage();
             VoiceMessage voice = VoiceMessage.builder()
-                    .messageId(message.getId()) // Use the generated UUID
+                    .messageId(message.getId())
                     .chatId(chat.getId())
                     .senderId(sender.getId())
                     .audioUrl(voiceDto.getAudioUrl())
@@ -158,6 +158,34 @@ public class MessageService {
         return messages.getContent().stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PaginatedResponse<MessageDTO> getChatMessagesPaginated(
+            UUID chatId, String username, int page, int size) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Check membership
+        if (!userChatRepository.existsByUserIdAndChatId(user.getId(), chatId)) {
+            throw new RuntimeException("User is not a member of this chat");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Message> messagesPage = messageRepository.findByChatIdAndIsDeletedFalse(chatId, pageable);
+
+        List<MessageDTO> messages = messagesPage.getContent().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+
+        return new PaginatedResponse<>(
+                messages,
+                page,
+                size,
+                messagesPage.getTotalElements(),
+                messagesPage.getTotalPages(),
+                messagesPage.isLast()
+        );
     }
 
     @Transactional
@@ -222,6 +250,9 @@ public class MessageService {
                     .fileType(attachment.getFileType())
                     .fileSize(attachment.getFileSize())
                     .fileUrl(fileStorageService.getFileUrl(attachment.getFileUrl()))
+                    .thumbnailUrl(attachment.getFileType().startsWith("image/") 
+                        ? fileStorageService.getFileUrl(attachment.getFileUrl() + "_thumb.jpg")
+                        : null)
                     .build());
         }
 

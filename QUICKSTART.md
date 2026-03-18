@@ -1,286 +1,240 @@
-# 🚀 Быстрый запуск Secure Messenger
+# 🚀 SECURE MESSENGER — QUICK START GUIDE
 
-## 📋 Требования
+## ⚡ One-Command Start (Recommended)
 
-- **Docker** (с Docker Compose)
-- **Java 17+** (для локальной сборки)
-- **Maven** (для локальной сборки)
-
-## 🖥️ Поддерживаемые платформы
-
-- ✅ Windows 10/11
-- ✅ macOS (Intel & Apple Silicon)
-- ✅ Linux (Ubuntu, Debian, CentOS, etc.)
-
----
-
-## ⚡ Один клик для запуска (Автоустановка включена!)
-
-### 🪟 Windows
-
-**Вариант 1: Двойной клик**
-```
-start.bat      → Автоматическая установка (если нужно) и запуск
-```
-
-**Вариант 2: Командная строка**
-```cmd
-start.bat
-```
-
-**Вариант 3: PowerShell**
-```powershell
-python quickstart.py   → Автоустановка и запуск
-python quickstart.py install   → Только установка
-python quickstart.py start     → Только запуск (с автоустановкой)
-```
-
-### 🍎 macOS
-
-**Вариант 1: Make (рекомендуется)**
+### For 30 Users (Recommended for Testing)
 ```bash
-make quickstart    # Установка + запуск
-# или
-make start         # Автоустановка (если нужно) и запуск
+start-30-users.bat
 ```
 
-**Вариант 2: Python скрипт**
+### For 2-3 Users (Minimal Resources)
 ```bash
-python3 quickstart.py        # Автоустановка и запуск
-python3 quickstart.py start  # Только запуск (с автоустановкой)
-```
-
-**Вариант 3: Shell скрипты**
-```bash
-chmod +x start.sh
-./start.sh         # Автоустановка (если нужно) и запуск
-```
-
-### 🐧 Linux
-
-**Вариант 1: Make (рекомендуется)**
-```bash
-make quickstart    # Установка + запуск
-# или
-make start         # Автоустановка (если нужно) и запуск
-```
-
-**Вариант 2: Python скрипт**
-```bash
-python3 quickstart.py        # Автоустановка и запуск
-python3 quickstart.py start  # Только запуск (с автоустановкой)
-```
-
-**Вариант 3: Shell скрипты**
-```bash
-chmod +x start.sh
-./start.sh         # Автоустановка (если нужно) и запуск
+start-2-3-users.bat
 ```
 
 ---
 
-## 🎮 Команды управления
+## 📋 PREREQUISITES
 
-### 🪟 Windows (CMD/PowerShell)
-
-```cmd
-:: Запуск
-start.bat
-
-:: Остановка
-docker-compose down
-
-:: Перезапуск
-docker-compose restart
-
-:: Логи
-docker-compose logs -f
-
-:: Просмотр статуса
-docker-compose ps
-```
-
-### 🍎🐧 macOS/Linux (Make)
-
-```bash
-# Показать все команды
-make help
-
-# Установка
-make install
-
-# Запуск
-make start
-
-# Остановка
-make stop
-
-# Перезапуск
-make restart
-
-# Логи
-make logs
-
-# Статус
-make status
-
-# Запуск тестов
-make test
-
-# Полная очистка
-make clean
-
-# Установка + запуск (одна команда)
-make quickstart
-```
-
-### 🐍 Python (все платформы)
-
-```bash
-# Автоустановка (если нужно) и запуск
-python quickstart.py
-
-# Отдельные команды
-python quickstart.py install    # Только установка
-python quickstart.py start      # Запуск (с автоустановкой если .env нет)
-python quickstart.py stop       # Остановка
-python quickstart.py restart    # Перезапуск
-python quickstart.py logs       # Логи
-python quickstart.py status     # Статус
-python quickstart.py test       # Тесты
-```
+| Software | Version | Download |
+|----------|---------|----------|
+| Java | 17+ | [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) |
+| Node.js | 18+ | [Node.js](https://nodejs.org/) |
+| Docker | 20+ | [Docker Desktop](https://www.docker.com/products/docker-desktop) |
+| Maven | 3.9+ | [Apache Maven](https://maven.apache.org/download.cgi) |
 
 ---
 
-## 🌐 Доступ после запуска
+## 🛠️ INSTALLATION
 
-| Сервис | URL | Логин/Пароль |
-|--------|-----|--------------|
-| **Messenger App** | http://localhost:8080 | - |
-| **Health Check** | http://localhost:8080/actuator/health | - |
-| **RabbitMQ** | http://localhost:15672 | guest/guest |
-| **MinIO** | http://localhost:9001 | minioadmin/minioadmin |
-
----
-
-## 📁 Структура скриптов
-
-```
-messenger-app/
-├── 🪟 Windows/
-│   ├── install.bat      → Установка
-│   └── start.bat        → Запуск
-│
-├── 🍎🐧 macOS/Linux/
-│   ├── Makefile         → Удобные команды
-│   ├── install.sh       → Установка
-│   └── start.sh         → Запуск
-│
-└── 🐍 Все платформы/
-    └── quickstart.py    → Универсальный скрипт
-```
-
----
-
-## 🔧 Решение проблем
-
-### Docker не найден
-
-**Windows:**
-- Установите Docker Desktop: https://www.docker.com/products/docker-desktop
-
-**macOS:**
+### Step 1: Clone Repository
 ```bash
-brew install --cask docker
-```
-
-**Linux:**
-```bash
-# Ubuntu/Debian
-sudo apt-get install docker.io docker-compose
-
-# CentOS/RHEL
-sudo yum install docker docker-compose
-```
-
-### Порты заняты
-
-Если порты 8080, 5432, 5672, 15672, 9000, 9001 заняты:
-
-1. Остановите конфликтующие сервисы
-2. Или измените порты в `docker-compose.yml`
-
-### Ошибки прав доступа (Linux/macOS)
-
-```bash
-chmod +x install.sh start.sh mvnw
-sudo usermod -aG docker $USER
-# Перелогиньтесь после этой команды
-```
-
----
-
-## 📝 Ручная установка (если автоматика не работает)
-
-### 1. Клонирование и переход в директорию
-```bash
+git clone <repository-url>
 cd messenger-app
 ```
 
-### 2. Создание .env файла
+### Step 2: Configure Environment
+Copy environment file:
 ```bash
-# Windows (PowerShell)
 copy .env.example .env
-
-# macOS/Linux
-cp .env.example .env
 ```
 
-Отредактируйте `.env` файл, указав свои настройки.
-
-### 3. Сборка приложения
-```bash
-# С Maven
-mvn clean package -DskipTests
-
-# Или с Gradle
-./gradlew build -x test
+Edit `.env` with your values:
+```env
+DB_PASSWORD=your_secure_password
+JWT_SECRET=your_jwt_secret_min_64_chars
+MINIO_SECRET_KEY=your_minio_secret
 ```
 
-### 4. Запуск Docker Compose
+### Step 3: Start Infrastructure (Docker)
 ```bash
-docker-compose up -d
+docker-compose up -d postgres rabbitmq minio redis
+```
+
+### Step 4: Start Backend
+```bash
+mvn spring-boot:run
+```
+
+### Step 5: Start Frontend (Development)
+```bash
+cd messenger-client
+npm install
+npm run dev
 ```
 
 ---
 
-## 🛑 Остановка
+## 🧪 TESTING API
 
+### Using CURL Test Suite
 ```bash
-# Остановка сервисов
-docker-compose down
+test-api.bat
+```
 
-# Полная очистка (с данными)
-docker-compose down -v
-make clean
+### Manual CURL Tests
+
+#### Health Check
+```bash
+curl -X GET http://localhost:8080/api/auth/health
+```
+
+#### Register User
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"testuser\",\"email\":\"test@example.com\",\"password\":\"testpass123\"}"
+```
+
+#### Login User
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"testuser\",\"password\":\"testpass123\"}"
+```
+
+### Load Testing
+```bash
+load-test.bat
 ```
 
 ---
 
-## 💡 Рекомендации
+## 📁 PROJECT STRUCTURE
 
-- **Windows:** Используйте PowerShell или Command Prompt от имени администратора
-- **macOS:** Рекомендуется использовать `make quickstart`
-- **Linux:** Убедитесь, что Docker запущен без sudo
+```
+messenger-app/
+├── src/main/java/com/messenger/    # Backend source
+├── messenger-client/src/           # Frontend source
+├── docker-compose.yml              # Docker configuration
+├── nginx/                          # Nginx configs
+├── scripts/                        # Utility scripts
+├── test-api.bat                    # API test suite
+├── load-test.bat                   # Load test suite
+└── README.md                       # This file
+```
 
 ---
 
-## 📞 Поддержка
+## 🔧 TROUBLESHOOTING
 
-При возникновении проблем:
-1. Проверьте, что Docker запущен
-2. Проверьте логи: `make logs` или `docker-compose logs`
-3. Пересоберите проект: `make clean && make quickstart`
+### Backend Won't Start
+1. Check Java version: `java -version` (should be 17+)
+2. Check port 8080: `netstat -ano | findstr :8080`
+3. Check logs: `backend.log`
 
-**Версия:** 1.0.0  
-**Дата:** 2026-02-16
+### Frontend Won't Start
+1. Check Node.js version: `node -v` (should be 18+)
+2. Clear node_modules: `rm -rf node_modules && npm install`
+3. Check port 5173: `netstat -ano | findstr :5173`
+
+### Database Connection Failed
+1. Check PostgreSQL is running: `docker ps | grep postgres`
+2. Check credentials in `.env`
+3. Restart PostgreSQL: `docker restart messenger-postgres`
+
+### 400 Error on Registration
+Check password requirements:
+- Minimum 8 characters
+- Valid email format
+- Username 3-50 characters
+
+---
+
+## 📊 API ENDPOINTS
+
+### Authentication
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/health` | GET | Health check |
+| `/api/auth/register` | POST | Register user |
+| `/api/auth/login` | POST | Login |
+| `/api/auth/refresh` | POST | Refresh token |
+| `/api/auth/logout` | POST | Logout |
+
+### Chats
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/chats` | GET | Get user's chats |
+| `/api/chats` | POST | Create chat |
+| `/api/chats/{id}` | GET | Get chat by ID |
+| `/api/chats/{id}/messages` | GET | Get messages |
+| `/api/chats/{id}/messages` | POST | Send message |
+
+---
+
+## 🔐 SECURITY
+
+- **Password Hashing**: BCrypt
+- **Authentication**: JWT tokens
+- **Encryption**: End-to-end (RSA-2048 + AES-256-GCM)
+- **Rate Limiting**: 1000 requests/minute for auth endpoints
+- **CORS**: Configured for all origins (development)
+
+---
+
+## 📈 MONITORING
+
+### Health Checks
+- Backend: `http://localhost:8080/actuator/health`
+- Auth Service: `http://localhost:8080/api/auth/health`
+
+### Logs
+- Backend: `backend.log`
+- Application: `logs/application.log`
+- Errors: `logs/error.log`
+
+### Management Endpoints
+- Health: `http://localhost:8080/actuator/health`
+- Metrics: `http://localhost:8080/actuator/metrics`
+
+---
+
+## 🎯 DEVELOPMENT MODES
+
+### Development (H2 Database)
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+### Production (PostgreSQL)
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=prod
+```
+
+---
+
+## 📝 ADDITIONAL DOCUMENTATION
+
+- [Architecture](ARCHITECTURE.md) — Full architecture documentation
+- [Deployment](DEPLOY.md) — Production deployment guide
+- [API Documentation](DOCUMENTATION.md) — Complete API reference
+- [User Guide](USER_GUIDE.md) — End-user documentation
+
+---
+
+## 🤝 CONTRIBUTING
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+---
+
+## 📄 LICENSE
+
+This project is licensed under the MIT License.
+
+---
+
+## 📞 SUPPORT
+
+For issues and questions:
+- GitHub Issues: [Create an issue]
+- Email: support@example.com
+
+---
+
+*Generated by AI Engineering Swarm System*

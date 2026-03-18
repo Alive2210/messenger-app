@@ -177,7 +177,8 @@ public class WebRtcConfigurationService {
     public Map<String, Object> getFullConfiguration() {
         Map<String, Object> config = new HashMap<>();
         
-        config.put("iceServers", getIceServersConfiguration());
+        // Merge ICE/network settings at top-level (clients expect `iceServers` to be a list, not a nested map).
+        config.putAll(getIceServersConfiguration());
         config.put("video", getVideoConfiguration());
         config.put("audio", getAudioConfiguration());
         config.put("p2p", getP2PConfiguration());

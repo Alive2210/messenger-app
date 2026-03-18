@@ -26,6 +26,9 @@ public class NetworkAutoConfiguration {
 
     @Value("${network.public-ip:}")
     private String configuredPublicIp;
+    
+    @Value("${network.external-ip:}")
+    private String configuredExternalIp;
 
     @Value("${network.external-ip-service:https://api.ipify.org}")
     private String externalIpService;
@@ -71,8 +74,11 @@ public class NetworkAutoConfiguration {
             log.info("🔒 VPN IP detected: {}", vpnIp);
         }
 
-        // Определяем публичный IP (если не указан вручную)
-        if (autoDetectIp && (configuredPublicIp == null || configuredPublicIp.isEmpty())) {
+        // Определяем публичный IP (сначала проверяем configuredExternalIp)
+        if (configuredExternalIp != null && !configuredExternalIp.isEmpty()) {
+            publicIp = configuredExternalIp;
+            log.info("🌍 Using configured external IP: {}", publicIp);
+        } else if (autoDetectIp && (configuredPublicIp == null || configuredPublicIp.isEmpty())) {
             publicIp = detectPublicIp();
             if (publicIp != null) {
                 log.info("🌍 Public IP detected: {}", publicIp);
@@ -181,7 +187,53 @@ public class NetworkAutoConfiguration {
     }
 
     private String detectPublicIp() {
-        return null;
+        // Priority 1: Use configured external IP from environment
+        if (configuredExternalIp != null && !configuredExternalIp.isEmpty()) {
+            log.info("Using configured external IP: {}", configuredExternalIp);
+            return configuredExternalIp;
+        }
+        
+        // Priority 2: Try to get public IP from external service
+        try {
+            java.net.URL url = new java.net.URL(externalIpService);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.setRequestMethod("GET");
+            
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(conn.getInputStream()))) {
+                String ip = reader.readLine();
+                if (ip != null && !ip.isEmpty() && isValidIpAddress(ip)) {
+                    log.info("Detected public IP from external service: {}", ip);
+                    return ip.trim();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not detect public IP from {}, using fallback", externalIpService);
+        }
+        
+        // Priority 3: Fallback to host.docker.internal if available (Docker Desktop)
+        try {
+            InetAddress hostDockerInternal = InetAddress.getByName("host.docker.internal");
+            String hostIp = hostDockerInternal.getHostAddress();
+            if (hostIp != null && !hostIp.startsWith("127.")) {
+                log.info("Using host.docker.internal IP as fallback: {}", hostIp);
+                return hostIp;
+            }
+        } catch (Exception e) {
+            log.debug("host.docker.internal not available");
+        }
+        
+        // Priority 4: Final fallback - use local IP
+        log.warn("Using local IP as fallback: {}", localIp);
+        return localIp;
+    }
+    
+    private boolean isValidIpAddress(String ip) {
+        if (ip == null || ip.isEmpty()) return false;
+        // Check if it's a valid IPv4 address
+        return ip.matches("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
     }
 
     public String generateTurnUrl() {

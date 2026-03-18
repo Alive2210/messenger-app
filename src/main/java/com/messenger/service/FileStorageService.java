@@ -3,6 +3,7 @@ package com.messenger.service;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.http.Method;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,9 @@ public class FileStorageService {
     private final MinioClient minioClient;
     private final AudioProcessingService audioProcessingService;
 
+    private static final int THUMB_WIDTH = 300;
+    private static final int THUMB_HEIGHT = 300;
+
     private final Map<String, UploadSession> uploadSessions = new ConcurrentHashMap<>();
     private static final String TEMP_UPLOAD_DIR = "./temp-uploads/";
 
@@ -45,6 +49,16 @@ public class FileStorageService {
     @Value("${minio.public-url:}")
     private String minioPublicUrl;
 
+    @PostConstruct
+    public void init() {
+        try {
+            log.info("Initializing MinIO bucket '{}' with public read policy", bucketName);
+            ensureBucketExists();
+        } catch (Exception e) {
+            log.error("Failed to initialize MinIO bucket", e);
+        }
+    }
+
     public String uploadFile(MultipartFile file, String userId) {
         try {
             ensureBucketExists();
@@ -60,11 +74,42 @@ public class FileStorageService {
                             .contentType(contentType)
                             .build());
 
+            // Generate thumbnail if image
+            if (contentType != null && contentType.startsWith("image/")) {
+                generateAndUploadThumbnail(file.getInputStream(), fileName, contentType);
+            }
+
             log.info("File uploaded successfully: {}", fileName);
             return fileName;
         } catch (Exception e) {
             log.error("Error uploading file", e);
             throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    private void generateAndUploadThumbnail(InputStream originalStream, String originalFileName, String contentType) {
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            net.coobird.thumbnailator.Thumbnails.of(originalStream)
+                    .size(THUMB_WIDTH, THUMB_HEIGHT)
+                    .outputFormat("jpg")
+                    .toOutputStream(outputStream);
+            
+            byte[] thumbData = outputStream.toByteArray();
+            String thumbFileName = originalFileName + "_thumb.jpg";
+
+            try (InputStream thumbStream = new ByteArrayInputStream(thumbData)) {
+                minioClient.putObject(
+                        PutObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(thumbFileName)
+                                .stream(thumbStream, thumbData.length, -1)
+                                .contentType("image/jpeg")
+                                .build());
+            }
+            log.info("Thumbnail generated and uploaded: {}", thumbFileName);
+        } catch (Exception e) {
+            log.warn("Failed to generate thumbnail for {}: {}", originalFileName, e.getMessage());
         }
     }
 
@@ -119,11 +164,9 @@ public class FileStorageService {
 
     public String getFileUrl(String fileName) {
         log.info("getFileUrl called: minioPublicUrl={}, bucketName={}, fileName={}", minioPublicUrl, bucketName, fileName);
-        if (minioPublicUrl != null && !minioPublicUrl.isBlank()) {
-            String url = minioPublicUrl + "/" + bucketName + "/" + fileName;
-            log.info("Generated public URL: {}", url);
-            return url;
-        }
+        
+        // ALWAYS use presigned URLs for secure access
+        // This ensures authentication is required for file access
         try {
             String url = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
@@ -135,8 +178,8 @@ public class FileStorageService {
             log.info("Generated presigned URL: {}", url);
             return url;
         } catch (Exception e) {
-            log.error("Error generating file URL", e);
-            throw new RuntimeException("Failed to generate file URL", e);
+            log.error("Error generating presigned URL", e);
+            throw new RuntimeException("Failed to generate presigned URL", e);
         }
     }
 
@@ -183,6 +226,25 @@ public class FileStorageService {
                             .build());
             log.info("Created bucket: {}", bucketName);
         }
+        
+        // ALWAYS set bucket policy to ensure public read access
+        String policyJson = "{\n" +
+                "  \"Version\": \"2012-10-17\",\n" +
+                "  \"Statement\": [\n" +
+                "    {\n" +
+                "      \"Effect\": \"Allow\",\n" +
+                "      \"Principal\": {\"AWS\": \"*\"},\n" +
+                "      \"Action\": [\"s3:GetObject\"],\n" +
+                "      \"Resource\": [\"arn:aws:s3:::" + bucketName + "/*\"]\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+        minioClient.setBucketPolicy(
+                SetBucketPolicyArgs.builder()
+                        .bucket(bucketName)
+                        .config(policyJson)
+                        .build());
+        log.info("Set bucket '{}' policy to public read", bucketName);
     }
 
     private String generateFileName(String originalFilename, String userId) {

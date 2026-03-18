@@ -1,10 +1,7 @@
 package com.messenger.service;
 
-import com.messenger.dto.ChatDTOs;
+import com.messenger.dto.*;
 import com.messenger.dto.ChatDTOs.*;
-import com.messenger.dto.FileAttachmentDTO;
-import com.messenger.dto.MessageDTO;
-import com.messenger.dto.VoiceMessageDTO;
 import com.messenger.entity.*;
 import com.messenger.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -138,6 +135,25 @@ public class ChatService {
         }
 
         @Transactional
+        public ChatDTO updateChatName(UUID chatId, String newName, String username) {
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+                Chat chat = chatRepository.findById(chatId)
+                                .orElseThrow(() -> new RuntimeException("Chat not found"));
+                UserChat membership = userChatRepository.findByUserIdAndChatId(user.getId(), chatId)
+                                .orElseThrow(() -> new RuntimeException("User is not a member of this chat"));
+
+                if (chat.getChatType() != Chat.ChatType.PERSONAL && !membership.getIsAdmin()) {
+                        throw new RuntimeException("Only admins can update chat name");
+                }
+
+                chat.setChatName(newName);
+                chatRepository.save(chat);
+                log.info("Chat {} name updated to {} by {}", chatId, newName, username);
+                return mapToDTO(chat, user.getId());
+        }
+
+        @Transactional
         public void removeParticipant(UUID chatId, String participantUsername, String adminUsername) {
                 User admin = userRepository.findByUsername(adminUsername)
                                 .orElseThrow(() -> new RuntimeException("Admin not found"));
@@ -212,17 +228,36 @@ public class ChatService {
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-                List<User> allUsers = userRepository.findAll().stream()
-                                .filter(u -> !u.getId().equals(user.getId()))
-                                .collect(Collectors.toList());
+                return chatRepository.findByUserIdAndChatType(user.getId(), Chat.ChatType.PERSONAL).stream()
+                                .map(chat -> {
+                                        User otherUser = chat.getUserChats().stream()
+                                                        .map(UserChat::getUser)
+                                                        .filter(u -> !u.getId().equals(user.getId()))
+                                                        .findFirst()
+                                                        .orElse(user); // Should not happen for personal chats
 
-                return allUsers.stream()
-                                .map(u -> ContactDTO.builder()
-                                                .userId(u.getId().toString())
-                                                .username(u.getUsername())
-                                                .avatarUrl(u.getAvatarUrl())
-                                                .isOnline(u.getIsOnline())
-                                                .statusMessage(u.getStatusMessage())
+                                        return ContactDTO.builder()
+                                                        .userId(otherUser.getId().toString())
+                                                        .username(otherUser.getUsername())
+                                                        .avatarUrl(otherUser.getAvatarUrl())
+                                                        .isOnline(otherUser.getIsOnline())
+                                                        .statusMessage(otherUser.getStatusMessage())
+                                                        .build();
+                                })
+                                .collect(Collectors.toList());
+        }
+
+        public List<ChatParticipantDTO> getChatParticipants(UUID chatId) {
+                return userChatRepository.findByChatId(chatId).stream()
+                                .map(uc -> ChatParticipantDTO.builder()
+                                                .userId(uc.getUser().getId().toString())
+                                                .username(uc.getUser().getUsername())
+                                                .avatarUrl(uc.getUser().getAvatarUrl())
+                                                .isAdmin(uc.getIsAdmin())
+                                                .isOnline(uc.getUser().getIsOnline())
+                                                .joinedAt(uc.getJoinedAt()) // Changed from uc.getCreatedAt() to
+                                                                            // uc.getJoinedAt() to match
+                                                                            // ChatParticipantDTO
                                                 .build())
                                 .collect(Collectors.toList());
         }
