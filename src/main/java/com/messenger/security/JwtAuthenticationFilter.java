@@ -80,6 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Supports:
      * - Authorization header: "Bearer <token>"
      * - Query parameter: token=<token> (for WebSocket)
+     * - Cookie: accessToken=<token>
      */
     private String extractJwtFromRequest(HttpServletRequest request) {
         // Check Authorization header first
@@ -93,6 +94,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = request.getParameter("token");
         if (StringUtils.hasText(token)) {
             return token;
+        }
+
+        // Fallback to cookie (HttpOnly cookie set by backend)
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (jakarta.servlet.http.Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
 
         return null;

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +26,12 @@ import java.util.UUID;
 @RequestMapping("/api/chats")
 @RequiredArgsConstructor
 public class ChatController {
+
+    @Value("${app.server.url:https://localhost}")
+    private String appServerUrl;
+
+    @Value("${NETWORK_EXTERNAL_IP:}")
+    private String networkExternalIp;
 
     private final ChatService chatService;
     private final MessageService messageService;
@@ -56,7 +63,7 @@ public class ChatController {
         // Verify user is in chat before allowing them to generate invite
         chatService.getChatById(chatId, userDetails.getUsername());
 
-        String inviteContent = "messenger://join-chat/" + chatId;
+        String inviteContent = resolveInviteBaseUrl() + "/?joinChat=" + chatId;
         String qrCode = qrCodeService.generateQRCodeBase64(inviteContent);
 
         java.util.Map<String, String> response = new java.util.HashMap<>();
@@ -64,6 +71,30 @@ public class ChatController {
         response.put("inviteLink", inviteContent);
 
         return ResponseEntity.ok(response);
+    }
+
+    private String resolveInviteBaseUrl() {
+        String normalizedBaseUrl = normalizeBaseUrl(appServerUrl);
+
+        try {
+            java.net.URI uri = java.net.URI.create(normalizedBaseUrl);
+            String host = uri.getHost();
+            if (host != null && ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host))
+                    && networkExternalIp != null && !networkExternalIp.isBlank()) {
+                return "https://" + networkExternalIp.trim();
+            }
+        } catch (IllegalArgumentException ex) {
+            log.warn("Failed to parse app.server.url for QR invite, using normalized value: {}", normalizedBaseUrl);
+        }
+
+        return normalizedBaseUrl;
+    }
+
+    private String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return "https://localhost";
+        }
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
     @GetMapping

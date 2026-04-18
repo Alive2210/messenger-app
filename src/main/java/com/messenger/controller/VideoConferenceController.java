@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.messenger.dto.CallSignalingDTOs;
 
 @Slf4j
 @RestController
@@ -55,6 +56,25 @@ public class VideoConferenceController {
                                 "/topic/chat/" + chatId + "/call",
                                 callNotification);
 
+                conference.getChat().getUserChats().stream()
+                                .map(userChat -> userChat.getUser())
+                                .filter(participant -> !participant.getUsername().equals(userDetails.getUsername()))
+                                .forEach(participant -> {
+                                        log.info("Sending direct call invite for conference {} to participant {}",
+                                                        conference.getId(), participant.getUsername());
+
+                                        messagingTemplate.convertAndSendToUser(
+                                                        participant.getUsername(),
+                                                        "/queue/call-invite",
+                                                        CallSignalingDTOs.CallInviteNotification.builder()
+                                                                        .conferenceId(conference.getId().toString())
+                                                                        .senderId(userDetails.getUsername())
+                                                                        .senderUsername(userDetails.getUsername())
+                                                                        .chatId(chatId.toString())
+                                                                        .isVideo(conference.getConferenceType() == VideoConference.ConferenceType.VIDEO)
+                                                                        .build());
+                                });
+
                 log.info("Call notification sent to chat topic {}", chatId);
 
                 return ResponseEntity.ok(dto);
@@ -73,9 +93,9 @@ public class VideoConferenceController {
         @GetMapping("/{conferenceId}")
         public ResponseEntity<ConferenceDTO> getConference(
                         @PathVariable UUID conferenceId) {
-
-                // TODO: implement get by id
-                return ResponseEntity.ok().build();
+                return conferenceService.getConferenceById(conferenceId)
+                                .map(conference -> ResponseEntity.ok(mapToDTO(conference)))
+                                .orElse(ResponseEntity.notFound().build());
         }
 
         @GetMapping("/{conferenceId}/participants")
@@ -164,9 +184,9 @@ public class VideoConferenceController {
         @GetMapping("/chats/{chatId}/active")
         public ResponseEntity<ConferenceDTO> getActiveConference(
                         @PathVariable UUID chatId) {
-
-                // TODO: implement
-                return ResponseEntity.ok().build();
+                return conferenceService.getActiveConferenceByChatId(chatId)
+                                .map(conference -> ResponseEntity.ok(mapToDTO(conference)))
+                                .orElse(ResponseEntity.notFound().build());
         }
 
         @GetMapping("/missed")

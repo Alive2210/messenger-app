@@ -111,7 +111,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                             
                             log.info("WebSocket user connected: {} (device: {})", username, deviceId);
                         } else {
-                            log.error("Invalid JWT token for WebSocket connection");
+                            log.warn("Invalid JWT token for WebSocket connection");
                             throw new IllegalArgumentException("Invalid JWT token");
                         }
                     } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {

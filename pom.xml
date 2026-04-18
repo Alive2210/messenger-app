@@ -264,10 +264,13 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
+                    <fork>true</fork>
                     <source>17</source>
                     <target>17</target>
+                    <sourcepath>${project.basedir}/src/main/java</sourcepath>
                     <compilerArgs>
                         <arg>-parameters</arg>
+                        <arg>-implicit:none</arg>
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>

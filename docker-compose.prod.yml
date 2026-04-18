@@ -10,8 +10,9 @@ services:
       - "443:443"
     volumes:
       - ./nginx/${NGINX_CONFIG:-nginx.ssl.conf}:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./messenger-client/dist:/usr/share/nginx/html:ro
+      - ./nginx/ssl/server.crt:/etc/nginx/ssl/server.crt:ro
+      - ./nginx/ssl/server.key:/etc/nginx/ssl/server.key:ro
+      - ./ca/ca.crt:/etc/nginx/ssl/ca.crt:ro
       - ./logs/nginx:/var/log/nginx
     depends_on:
       - app

@@ -30,7 +30,7 @@ public class ChatService {
         private final VoiceMessageRepository voiceMessageRepository;
 
         @Transactional
-        @CacheEvict(value = "userChats", key = "#creatorUsername")
+        @CacheEvict(value = { "userChats", "chatById" }, allEntries = true)
         public ChatDTO createChat(CreateChatRequest request, String creatorUsername) {
                 User creator = userRepository.findByUsername(creatorUsername)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -177,6 +177,7 @@ public class ChatService {
         }
 
         @Transactional
+        @CacheEvict(value = { "userChats", "chatById" }, allEntries = true)
         public ChatDTO getOrCreatePersonalChat(String username1, String username2) {
                 User user1 = userRepository.findByUsername(username1)
                                 .orElseThrow(() -> new RuntimeException("User not found: " + username1));
@@ -198,7 +199,7 @@ public class ChatService {
         }
 
         @Transactional
-        @CacheEvict(value = "userChats", key = "#username")
+        @CacheEvict(value = { "userChats", "chatById" }, allEntries = true)
         public void deleteChat(UUID chatId, String username) {
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -228,22 +229,32 @@ public class ChatService {
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-                return chatRepository.findByUserIdAndChatType(user.getId(), Chat.ChatType.PERSONAL).stream()
-                                .map(chat -> {
-                                        User otherUser = chat.getUserChats().stream()
-                                                        .map(UserChat::getUser)
-                                                        .filter(u -> !u.getId().equals(user.getId()))
-                                                        .findFirst()
-                                                        .orElse(user); // Should not happen for personal chats
+                List<UUID> existingContactIds = chatRepository.findByUserIdAndChatType(user.getId(), Chat.ChatType.PERSONAL).stream()
+                                .flatMap(chat -> chat.getUserChats().stream())
+                                .map(UserChat::getUser)
+                                .map(User::getId)
+                                .filter(id -> !id.equals(user.getId()))
+                                .distinct()
+                                .toList();
 
-                                        return ContactDTO.builder()
-                                                        .userId(otherUser.getId().toString())
-                                                        .username(otherUser.getUsername())
-                                                        .avatarUrl(otherUser.getAvatarUrl())
-                                                        .isOnline(otherUser.getIsOnline())
-                                                        .statusMessage(otherUser.getStatusMessage())
-                                                        .build();
+                return userRepository.findAll().stream()
+                                .filter(otherUser -> !otherUser.getId().equals(user.getId()))
+                                .sorted((left, right) -> {
+                                        boolean leftExisting = existingContactIds.contains(left.getId());
+                                        boolean rightExisting = existingContactIds.contains(right.getId());
+                                        if (leftExisting != rightExisting) {
+                                                return leftExisting ? -1 : 1;
+                                        }
+
+                                        boolean leftOnline = Boolean.TRUE.equals(left.getIsOnline());
+                                        boolean rightOnline = Boolean.TRUE.equals(right.getIsOnline());
+                                        if (leftOnline != rightOnline) {
+                                                return leftOnline ? -1 : 1;
+                                        }
+
+                                        return left.getUsername().compareToIgnoreCase(right.getUsername());
                                 })
+                                .map(this::mapToContactDTO)
                                 .collect(Collectors.toList());
         }
 
@@ -378,6 +389,16 @@ public class ChatService {
                                 .createdAt(message.getCreatedAt())
                                 .fileAttachment(fileAttachmentDTO)
                                 .voiceMessage(voiceMessageDTO)
+                                .build();
+        }
+
+        private ContactDTO mapToContactDTO(User user) {
+                return ContactDTO.builder()
+                                .userId(user.getId().toString())
+                                .username(user.getUsername())
+                                .avatarUrl(user.getAvatarUrl())
+                                .isOnline(Boolean.TRUE.equals(user.getIsOnline()))
+                                .statusMessage(user.getStatusMessage())
                                 .build();
         }
 }

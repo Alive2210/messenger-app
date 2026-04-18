@@ -88,7 +88,9 @@ public class AuthService {
                 .isOnline(false)
                 .build();
 
-        userRepository.save(user);
+        // Flush immediately so the authentication step can see the new user
+        // within the same request/transaction.
+        userRepository.saveAndFlush(user);
 
         MessengerLogger.audit("USER_REGISTRATION", request.getUsername(),
                 "Email: " + request.getEmail());

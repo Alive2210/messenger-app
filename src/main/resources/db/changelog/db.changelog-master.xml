@@ -325,4 +325,15 @@
         </sql>
     </changeSet>
 
+    <changeSet id="message-mentions-created-at-index" author="developer">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="message_mentions" indexName="idx_mention_created_at"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="message_mentions" indexName="idx_mention_created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

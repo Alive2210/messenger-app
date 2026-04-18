@@ -3,6 +3,7 @@ package com.messenger.controller;
 import com.messenger.dto.AuthDTOs.*;
 import com.messenger.service.AuthService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,9 +64,29 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token,
+            HttpServletRequest request,
             HttpServletResponse response) {
-        authService.logout(token.replace("Bearer ", ""));
+        // Try to get token from Authorization header first, then from cookies
+        String jwt = null;
+        if (token != null && token.startsWith("Bearer ")) {
+            jwt = token.replace("Bearer ", "");
+        } else {
+            // Fallback to cookie
+            jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (jakarta.servlet.http.Cookie cookie : cookies) {
+                    if ("accessToken".equals(cookie.getName())) {
+                        jwt = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (jwt != null) {
+            authService.logout(jwt);
+        }
         clearAuthCookies(response);
         return ResponseEntity.ok().build();
     }

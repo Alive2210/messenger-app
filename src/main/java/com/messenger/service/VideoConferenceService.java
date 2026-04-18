@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -160,6 +161,16 @@ public class VideoConferenceService {
     @Transactional(readOnly = true)
     public List<ConferenceParticipant> getConferenceParticipants(UUID conferenceId) {
         return participantRepository.findByConferenceIdAndLeftAtIsNull(conferenceId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<VideoConference> getConferenceById(UUID conferenceId) {
+        return conferenceRepository.findById(conferenceId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<VideoConference> getActiveConferenceByChatId(UUID chatId) {
+        return conferenceRepository.findActiveByChatId(chatId);
     }
 
     @Transactional

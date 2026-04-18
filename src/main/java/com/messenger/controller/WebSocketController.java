@@ -1,6 +1,7 @@
 package com.messenger.controller;
 
 import com.messenger.dto.*;
+import com.messenger.service.ChatService;
 import com.messenger.service.MessageService;
 import com.messenger.service.ReactionService;
 import com.messenger.service.VideoConferenceService;
@@ -26,6 +27,7 @@ import java.util.UUID;
 public class WebSocketController {
 
         private final SimpMessagingTemplate messagingTemplate;
+        private final ChatService chatService;
         private final MessageService messageService;
         private final VideoConferenceService videoConferenceService;
         private final WebRtcConfigurationService webRtcConfigurationService;
@@ -48,6 +50,17 @@ public class WebSocketController {
                         messagingTemplate.convertAndSend(
                                         "/topic/chat/" + request.getChatId(),
                                         message);
+
+                        // Also deliver directly to each participant so their chat list can refresh
+                        // even when they have not opened/subscribed to this chat yet.
+                        chatService.getChatById(request.getChatId(), username)
+                                        .getParticipants()
+                                        .stream()
+                                        .filter(participant -> !participant.getUsername().equals(username))
+                                        .forEach(participant -> messagingTemplate.convertAndSendToUser(
+                                                        participant.getUsername(),
+                                                        "/queue/messages",
+                                                        message));
 
                         // Send delivery receipt to sender
                         messagingTemplate.convertAndSendToUser(
@@ -147,6 +160,7 @@ public class WebSocketController {
 
                 CallSignalingDTOs.CallInviteNotification notification = CallSignalingDTOs.CallInviteNotification
                                 .builder()
+                                .conferenceId(request.getConferenceId())
                                 .senderId(principal.getName())
                                 .senderUsername(principal.getName())
                                 .chatId(request.getChatId())
@@ -276,7 +290,9 @@ public class WebSocketController {
                                                         principal.getName()));
 
                         // Store conference ID in session
-                        headerAccessor.getSessionAttributes().put("conferenceId", request.getConferenceId());
+                        if (headerAccessor.getSessionAttributes() != null) {
+                                headerAccessor.getSessionAttributes().put("conferenceId", request.getConferenceId());
+                        }
 
                 } catch (Exception e) {
                         log.error("Error joining conference", e);
